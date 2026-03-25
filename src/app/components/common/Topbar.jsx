@@ -7,7 +7,7 @@ export default function Topbar() {
 
     const navigate = useNavigate();
 
-    const {profile, user, membership} = useAuth();
+    const {profile, user, membership, barbershop} = useAuth();
 
     const displayName = profile?.full_name || user?.email || "Usuário";
 
@@ -19,6 +19,26 @@ export default function Topbar() {
     };
 
     const membershipName = roleLabelMap[membership?.role] || "Sem cargo";
+
+    const planMetaMap = {
+        starter: {
+            label: "Plano Starter",
+            price: "R$ 49/mês",
+        },
+        pro: {
+            label: "Plano Profissional",
+            price: "R$ 99/mês",
+        },
+        premium: {
+            label: "Plano Premium",
+            price: "R$ 149/mês",
+        },
+    };
+
+    const currentPlan = planMetaMap[barbershop?.plan] || {
+        label: "Sem plano",
+        price: "",
+    };
 
     async function handleLogout() {
         const {error} = await supabase.auth.signOut({scope: "local"});
@@ -41,8 +61,12 @@ export default function Topbar() {
             <Toolbar sx={{display: "flex", justifyContent: "space-between"}}>
                 <Box>
                     <Typography variant="h6" fontWeight={600}>
-                        Plano: {membershipName || "Sem cargo"}
+                        Cargo: {membershipName || "Sem cargo"}
                     </Typography>
+                </Box>
+                <Box>
+                    <Typography>{currentPlan.label}</Typography>
+                    <Typography>{currentPlan.price}</Typography>
                 </Box>
 
                 <Box sx={{display: "flex", alignItems: "center", gap: 2}}>

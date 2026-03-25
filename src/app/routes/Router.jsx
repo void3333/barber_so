@@ -5,6 +5,7 @@ import GuestRoute from "./GuestRoute.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import LoginPage from "../pages/LoginPage/LoginPage.jsx";
 import SignupPage from "../pages/SignupPage/SignupPage.jsx";
+import CheckoutPage from "../pages/CheckoutPage/CheckoutPage.jsx";
 
 const appChildren = sidebarRoutes.map((route) => {
     if (route.path === "/") {
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
     {
         path: "/signup",
         element: <SignupPage/>,
+    },
+    {
+        path: "/checkout",
+        element: <CheckoutPage />,
     },
     {
         element: <ProtectedRoute/>,
