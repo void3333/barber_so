@@ -12,7 +12,7 @@ const AppLayout = () => {
             <Box sx={{flex: 1, display: "flex", flexDirection: 'column'}}>
                 <Topbar/>
 
-                <Box component="main" sx={{flex: 1, p: 2}}>
+                <Box component="main" sx={{flex: 1, p: 3}}>
                     <Outlet/>
                 </Box>
 

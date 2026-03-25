@@ -4,7 +4,6 @@ import AppLayout from "../components/layouts/AppLayout.jsx";
 import GuestRoute from "./GuestRoute.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import LoginPage from "../pages/LoginPage/LoginPage.jsx";
-import SignupPage from "../pages/SignupPage/SignupPage.jsx";
 import CheckoutPage from "../pages/CheckoutPage/CheckoutPage.jsx";
 
 const appChildren = sidebarRoutes.map((route) => {
@@ -30,10 +29,6 @@ const router = createBrowserRouter([
                 element: <LoginPage/>,
             },
         ],
-    },
-    {
-        path: "/signup",
-        element: <SignupPage/>,
     },
     {
         path: "/checkout",

@@ -1,8 +1,9 @@
 // noinspection SpellCheckingInspection,JSValidateTypes
 
-import {NavLink} from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
     Box,
+    Chip,
     Divider,
     List,
     ListItemButton,
@@ -10,52 +11,155 @@ import {
     ListItemText,
     Toolbar,
     Typography,
+    Stack,
 } from "@mui/material";
-import {sidebarRoutes} from "../../routes/SidebarRoutes.jsx";
-import {useAuth} from "../../hooks/useAuth.js";
+import { sidebarRoutes } from "../../routes/SidebarRoutes.jsx";
+import { useAuth } from "../../hooks/useAuth.js";
+import barberOsLogo from "../../../assets/barber-os-logo-light.png";
+
+const planLabelMap = {
+    starter: "Starter",
+    pro: "Profissional",
+    premium: "Premium",
+};
 
 export default function Sidebar() {
-
     const { barbershop } = useAuth();
 
     const shopName = barbershop?.name || "Sem barbearia";
+    const planName = planLabelMap[barbershop?.plan] || "Sem plano";
 
     return (
         <Box
             sx={{
-                width: 260,
-                borderRight: 1,
-                borderColor: "divider",
-                bgcolor: "background.paper",
+                width: 280,
+                minHeight: "100vh",
+                borderRight: "1px solid rgba(255,255,255,0.06)",
+                background:
+                    "linear-gradient(180deg, #111214 0%, #17181b 55%, #0f0f10 100%)",
+                color: "#fff",
+                display: "flex",
+                flexDirection: "column",
             }}
         >
-            <Toolbar>
-                <Typography variant="h6" fontWeight={700}>
-                    {shopName}
-                </Typography>
+            <Toolbar
+                sx={{
+                    minHeight: "auto !important",
+                    alignItems: "flex-start",
+                    px: 2.5,
+                    py: 2.5,
+                }}
+            >
+                <Stack spacing={2} sx={{ width: "100%" }}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box
+                            component="img"
+                            src={barberOsLogo}
+                            alt="BarberOS"
+                            sx={{
+                                width: 200,
+                                height: 42,
+                                objectFit: "contain",
+                                borderRadius: 2,
+                                flexShrink: 0,
+                            }}
+                        />
+                    </Stack>
+
+                    <Box
+                        sx={{
+                            p: 1.6,
+                            borderRadius: 3,
+                            bgcolor: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                    >
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: "rgba(255,255,255,0.56)",
+                                textTransform: "uppercase",
+                                letterSpacing: 0.8,
+                            }}
+                        >
+                            Barbearia
+                        </Typography>
+
+                        <Typography
+                            variant="subtitle1"
+                            fontWeight={700}
+                            sx={{
+                                mt: 0.5,
+                                color: "#fff",
+                                lineHeight: 1.2,
+                                wordBreak: "break-word",
+                            }}
+                        >
+                            {shopName}
+                        </Typography>
+
+                        <Chip
+                            label={planName}
+                            size="small"
+                            sx={{
+                                mt: 1.4,
+                                height: 26,
+                                fontWeight: 700,
+                                bgcolor: "rgba(196,138,63,0.16)",
+                                color: "#d89b49",
+                                border: "1px solid rgba(216,155,73,0.28)",
+                            }}
+                        />
+                    </Box>
+                </Stack>
             </Toolbar>
 
-            <Divider/>
+            <Divider sx={{ borderColor: "rgba(255,255,255,0.06)" }} />
 
-            <List sx={{p: 2}}>
+            <List sx={{ p: 2, flex: 1 }}>
                 {sidebarRoutes.map((route) => (
                     <ListItemButton
                         key={route.path}
                         component={NavLink}
                         to={route.path}
                         sx={{
-                            borderRadius: 2,
+                            borderRadius: 3,
                             mb: 1,
-                            color: "text.primary",
+                            px: 1.4,
+                            py: 1.1,
+                            color: "rgba(255,255,255,0.72)",
+                            transition: "all 0.2s ease",
+                            "& .MuiListItemIcon-root": {
+                                color: "inherit",
+                            },
+                            "&:hover": {
+                                bgcolor: "rgba(255,255,255,0.05)",
+                                color: "#fff",
+                            },
                             "&.active": {
-                                bgcolor: "action.selected",
+                                bgcolor: "rgba(196,138,63,0.14)",
+                                color: "#fff",
+                                border: "1px solid rgba(196,138,63,0.28)",
+                                boxShadow: "inset 0 0 0 1px rgba(196,138,63,0.06)",
                             },
                         }}
                     >
-                        <ListItemIcon sx={{minWidth: 40, color: "inherit"}}>
+                        <ListItemIcon
+                            sx={{
+                                minWidth: 40,
+                                color: "inherit",
+                            }}
+                        >
                             {route.icon}
                         </ListItemIcon>
-                        <ListItemText primary={route.label}/>
+
+                        <ListItemText
+                            primary={route.label}
+                            primaryTypographyProps={{
+                                fontSize: 14,
+                                fontWeight: 600,
+                            }}
+                        />
                     </ListItemButton>
                 ))}
             </List>
