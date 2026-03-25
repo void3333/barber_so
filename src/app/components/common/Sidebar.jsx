@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { sidebarRoutes } from "../../routes/SidebarRoutes.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
-import barberOsLogo from "../../../assets/barber-os-logo-light.png";
+import barberOsLogo from "../../../assets/barber-os-logo-light.webp";
 
 const planLabelMap = {
     starter: "Starter",
@@ -51,20 +51,20 @@ export default function Sidebar() {
                 }}
             >
                 <Stack spacing={2} sx={{ width: "100%" }}>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Box
-                            component="img"
-                            src={barberOsLogo}
-                            alt="BarberOS"
-                            sx={{
-                                width: 200,
-                                height: 42,
-                                objectFit: "contain",
-                                borderRadius: 2,
-                                flexShrink: 0,
-                            }}
-                        />
-                    </Stack>
+                    {/*<Stack direction="row" spacing={1.5} alignItems="center">*/}
+                    {/*    <Box*/}
+                    {/*        component="img"*/}
+                    {/*        src={barberOsLogo}*/}
+                    {/*        alt="BarberOS"*/}
+                    {/*        sx={{*/}
+                    {/*            width: 130,*/}
+                    {/*            height: 80,*/}
+                    {/*            objectFit: "contain",*/}
+                    {/*            borderRadius: 2,*/}
+                    {/*            flexShrink: 0,*/}
+                    {/*        }}*/}
+                    {/*    />*/}
+                    {/*</Stack>*/}
 
                     <Box
                         sx={{

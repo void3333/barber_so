@@ -17,7 +17,7 @@ import {
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
-import barberOsLogo from "../.././../assets/barber-os-logo-light.png";
+import barberOsLogo from "../.././../assets/barber-os-logo-light.webp";
 import { supabase } from "../../lib/supabase.js";
 
 export default function LoginPage() {
@@ -89,16 +89,13 @@ export default function LoginPage() {
                                     alt="BarberOS"
                                     sx={{
                                         width: 300,
-                                        height: 52,
+                                        height: 100,
                                         objectFit: "contain",
                                         borderRadius: 2,
                                     }}
                                 />
 
                                 <Box>
-                                    <Typography variant="h5" fontWeight={800} letterSpacing={0.2}>
-                                        BarberOS
-                                    </Typography>
                                     <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.64)" }}>
                                         Plataforma para barbearias modernas
                                     </Typography>
