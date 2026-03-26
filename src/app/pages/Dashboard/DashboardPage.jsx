@@ -145,13 +145,13 @@ export default function DashboardPage() {
     }
 
     const { stats, upcomingAppointments, statusSummary } = data;
-    const currentPlan = planLabelMap[barbershop?.plan] || "Sem plano";
+    // const currentPlan = planLabelMap[barbershop?.plan] || "Sem plano";
 
     return (
         <Stack spacing={3} sx={{ width: "100%" }}>
             <Box>
                 <Typography variant="h4" fontWeight={700}>
-                    Dashboard
+                    Painel Geral
                 </Typography>
 
                 <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import {useMemo, useState} from "react";
 import {
     Alert,
     Box,
@@ -23,24 +23,26 @@ import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import TodayRoundedIcon from "@mui/icons-material/TodayRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import Swal from "sweetalert2";
-import { useAuth } from "../../hooks/useAuth.js";
-import { getClients } from "../../features/clients/api/getClients.jsx";
-import { getServices } from "../../features/services/api/getServices.jsx";
+import {useAuth} from "../../hooks/useAuth.js";
+import {getClients} from "../../features/clients/api/getClients.jsx";
+import {getServices} from "../../features/services/api/getServices.jsx";
+import {getStaff} from "../../features/staff/api/getStaff.jsx";
 import {getAppointments} from "../../features/appointments/getAppointments.jsx";
 import {createAppointmentRecord} from "../../features/appointments/createAppointment.jsx";
 import {updateAppointmentRecord} from "../../features/appointments/updateAppointment.jsx";
 import {deleteAppointmentRecord} from "../../features/appointments/deleteAppointment.jsx";
+import {getAppointmentErrorMessage} from "../../features/appointments/utils/getAppointmentErrorMessage.jsx";
+import {toUtcIsoFromLocalDateTime} from "../../features/appointments/utils/toUtcIsoFromLocalDateTime.jsx";
 
 const statusOptions = [
-    { value: "scheduled", label: "Agendado" },
-    { value: "confirmed", label: "Confirmado" },
-    { value: "completed", label: "Concluído" },
-    { value: "cancelled", label: "Cancelado" },
+    {value: "scheduled", label: "Agendado"},
+    {value: "confirmed", label: "Confirmado"},
+    {value: "completed", label: "Concluído"},
+    {value: "cancelled", label: "Cancelado"},
 ];
 
 const statusLabelMap = {
@@ -99,7 +101,7 @@ function isFuture(dateString) {
     return new Date(dateString).getTime() >= Date.now();
 }
 
-function SummaryCard({ title, value, subtitle, icon }) {
+function SummaryCard({title, value, subtitle, icon}) {
     return (
         <Card
             sx={{
@@ -112,12 +114,12 @@ function SummaryCard({ title, value, subtitle, icon }) {
         >
             <CardContent>
                 <Stack spacing={1.5}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
                         <Typography variant="body2" color="text.secondary">
                             {title}
                         </Typography>
 
-                        <Box sx={{ color: "text.secondary", display: "flex" }}>{icon}</Box>
+                        <Box sx={{color: "text.secondary", display: "flex"}}>{icon}</Box>
                     </Box>
 
                     <Typography variant="h4" fontWeight={700}>
@@ -142,6 +144,7 @@ function AppointmentCard({
                          }) {
     const clientName = appointment.client?.name || "Cliente";
     const serviceName = appointment.service?.name || "Serviço";
+    const staffName = appointment.staff?.name || "Sem profissional";
     const status = appointment.status;
 
     return (
@@ -156,10 +159,10 @@ function AppointmentCard({
             <CardContent>
                 <Stack spacing={2}>
                     <Stack
-                        direction={{ xs: "column", md: "row" }}
+                        direction={{xs: "column", md: "row"}}
                         spacing={2}
                         justifyContent="space-between"
-                        alignItems={{ xs: "flex-start", md: "center" }}
+                        alignItems={{xs: "flex-start", md: "center"}}
                     >
                         <Box>
                             <Typography variant="h6" fontWeight={700}>
@@ -169,12 +172,16 @@ function AppointmentCard({
                             <Typography variant="body2" color="text.secondary">
                                 {serviceName}
                             </Typography>
+
+                            <Typography variant="body2" color="text.secondary" sx={{mt: 0.5}}>
+                                Profissional: {staffName}
+                            </Typography>
                         </Box>
 
                         <Stack
-                            direction={{ xs: "column", sm: "row" }}
+                            direction={{xs: "column", sm: "row"}}
                             spacing={1}
-                            alignItems={{ xs: "flex-start", sm: "center" }}
+                            alignItems={{xs: "flex-start", sm: "center"}}
                         >
                             <Typography variant="body2" color="text.secondary">
                                 {formatDateTime(appointment.starts_at)}
@@ -195,10 +202,10 @@ function AppointmentCard({
                         </Typography>
                     )}
 
-                    <Divider />
+                    <Divider/>
 
                     <Stack
-                        direction={{ xs: "column", lg: "row" }}
+                        direction={{xs: "column", lg: "row"}}
                         spacing={1}
                         justifyContent="space-between"
                     >
@@ -236,7 +243,7 @@ function AppointmentCard({
                         <Stack direction="row" spacing={1}>
                             <Button
                                 size="small"
-                                startIcon={<EditRoundedIcon />}
+                                startIcon={<EditRoundedIcon/>}
                                 onClick={() => onEdit(appointment)}
                                 disabled={busy}
                             >
@@ -246,7 +253,7 @@ function AppointmentCard({
                             <Button
                                 size="small"
                                 color="error"
-                                startIcon={<DeleteRoundedIcon />}
+                                startIcon={<DeleteRoundedIcon/>}
                                 onClick={() => onDelete(appointment)}
                                 disabled={busy}
                             >
@@ -261,18 +268,19 @@ function AppointmentCard({
 }
 
 export default function AppointmentsPage() {
-    const { barbershop } = useAuth();
+    const {barbershop} = useAuth();
     const queryClient = useQueryClient();
 
     const [openCreateModal, setOpenCreateModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-    const [dateFilter, setDateFilter] = useState("today");
+    const [dateFilter, setDateFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("all");
 
     const [clientId, setClientId] = useState("");
     const [serviceId, setServiceId] = useState("");
+    const [staffId, setStaffId] = useState("");
     const [startsAt, setStartsAt] = useState("");
     const [status, setStatus] = useState("scheduled");
     const [notes, setNotes] = useState("");
@@ -289,15 +297,21 @@ export default function AppointmentsPage() {
         enabled: !!barbershop?.id,
     });
 
-    const { data: clients = [] } = useQuery({
+    const {data: clients = []} = useQuery({
         queryKey: ["clients", barbershop?.id],
         queryFn: () => getClients(barbershop.id),
         enabled: !!barbershop?.id,
     });
 
-    const { data: services = [] } = useQuery({
+    const {data: services = []} = useQuery({
         queryKey: ["services", barbershop?.id],
         queryFn: () => getServices(barbershop.id),
+        enabled: !!barbershop?.id,
+    });
+
+    const {data: staff = []} = useQuery({
+        queryKey: ["staff", barbershop?.id],
+        queryFn: () => getStaff(barbershop.id),
         enabled: !!barbershop?.id,
     });
 
@@ -305,11 +319,11 @@ export default function AppointmentsPage() {
         mutationFn: createAppointmentRecord,
         onSuccess: async () => {
             handleCloseCreateModal();
-            await queryClient.invalidateQueries({ queryKey: ["appointments", barbershop?.id] });
-            await queryClient.refetchQueries({ queryKey: ["appointments", barbershop?.id] });
+            await queryClient.invalidateQueries({queryKey: ["appointments", barbershop?.id]});
+            await queryClient.refetchQueries({queryKey: ["appointments", barbershop?.id]});
         },
         onError: (mutationError) => {
-            setFormError(mutationError.message || "Erro ao criar agendamento.");
+            setFormError(getAppointmentErrorMessage(mutationError));
         },
     });
 
@@ -317,25 +331,26 @@ export default function AppointmentsPage() {
         mutationFn: updateAppointmentRecord,
         onSuccess: async () => {
             handleCloseEditModal();
-            await queryClient.invalidateQueries({ queryKey: ["appointments", barbershop?.id] });
-            await queryClient.refetchQueries({ queryKey: ["appointments", barbershop?.id] });
+            await queryClient.invalidateQueries({queryKey: ["appointments", barbershop?.id]});
+            await queryClient.refetchQueries({queryKey: ["appointments", barbershop?.id]});
         },
         onError: (mutationError) => {
-            setFormError(mutationError.message || "Erro ao atualizar agendamento.");
+            setFormError(getAppointmentErrorMessage(mutationError));
         },
     });
 
     const deleteAppointmentMutation = useMutation({
         mutationFn: deleteAppointmentRecord,
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ["appointments", barbershop?.id] });
-            await queryClient.refetchQueries({ queryKey: ["appointments", barbershop?.id] });
+            await queryClient.invalidateQueries({queryKey: ["appointments", barbershop?.id]});
+            await queryClient.refetchQueries({queryKey: ["appointments", barbershop?.id]});
         },
     });
 
     function resetForm() {
         setClientId("");
         setServiceId("");
+        setStaffId("");
         setStartsAt("");
         setStatus("scheduled");
         setNotes("");
@@ -358,6 +373,7 @@ export default function AppointmentsPage() {
         setSelectedAppointment(appointment);
         setClientId(appointment.client?.id || "");
         setServiceId(appointment.service?.id || "");
+        setStaffId(appointment.staff?.id || "");
         setStartsAt(toDatetimeLocalValue(appointment.starts_at));
         setStatus(appointment.status || "scheduled");
         setNotes(appointment.notes || "");
@@ -375,11 +391,27 @@ export default function AppointmentsPage() {
         event.preventDefault();
         setFormError("");
 
+        if (!clientId) {
+            setFormError("Selecione um cliente.");
+            return;
+        }
+
+        if (!serviceId) {
+            setFormError("Selecione um serviço.");
+            return;
+        }
+
+        if (!startsAt) {
+            setFormError("Informe a data e hora do agendamento.");
+            return;
+        }
+
         await createAppointmentMutation.mutateAsync({
             barbershopId: barbershop.id,
             clientId,
             serviceId,
-            startsAt,
+            staffId,
+            startsAt: toUtcIsoFromLocalDateTime(startsAt),
             status,
             notes,
         });
@@ -389,11 +421,27 @@ export default function AppointmentsPage() {
         event.preventDefault();
         setFormError("");
 
+        if (!clientId) {
+            setFormError("Selecione um cliente.");
+            return;
+        }
+
+        if (!serviceId) {
+            setFormError("Selecione um serviço.");
+            return;
+        }
+
+        if (!startsAt) {
+            setFormError("Informe a data e hora do agendamento.");
+            return;
+        }
+
         await updateAppointmentMutation.mutateAsync({
             id: selectedAppointment.id,
             clientId,
             serviceId,
-            startsAt,
+            staffId,
+            startsAt: toUtcIsoFromLocalDateTime(startsAt),
             status,
             notes,
         });
@@ -408,6 +456,13 @@ export default function AppointmentsPage() {
             confirmButtonText: "Excluir",
             cancelButtonText: "Cancelar",
             reverseButtons: true,
+            target: document.body,
+            didOpen: () => {
+                const container = document.querySelector(".swal2-container");
+                if (container) {
+                    container.style.zIndex = "99999";
+                }
+            },
         });
 
         if (!result.isConfirmed) return;
@@ -420,13 +475,27 @@ export default function AppointmentsPage() {
                 text: "O agendamento foi removido com sucesso.",
                 icon: "success",
                 confirmButtonText: "OK",
+                target: document.body,
+                didOpen: () => {
+                    const container = document.querySelector(".swal2-container");
+                    if (container) {
+                        container.style.zIndex = "99999";
+                    }
+                },
             });
         } catch (mutationError) {
             await Swal.fire({
                 title: "Erro ao excluir",
-                text: mutationError.message || "Não foi possível excluir o agendamento.",
+                text: getAppointmentErrorMessage(mutationError),
                 icon: "error",
                 confirmButtonText: "OK",
+                target: document.body,
+                didOpen: () => {
+                    const container = document.querySelector(".swal2-container");
+                    if (container) {
+                        container.style.zIndex = "99999";
+                    }
+                },
             });
         }
     }
@@ -437,12 +506,13 @@ export default function AppointmentsPage() {
                 id: appointment.id,
                 clientId: appointment.client?.id,
                 serviceId: appointment.service?.id,
+                staffId: appointment.staff?.id || null,
                 startsAt: appointment.starts_at,
                 status: nextStatus,
                 notes: appointment.notes || "",
             });
         } catch (error) {
-            return error;
+            return error.message;
         }
     }
 
@@ -490,8 +560,8 @@ export default function AppointmentsPage() {
 
     if (isLoading) {
         return (
-            <Box sx={{ display: "grid", placeItems: "center", py: 8 }}>
-                <CircularProgress />
+            <Box sx={{display: "grid", placeItems: "center", py: 8}}>
+                <CircularProgress/>
             </Box>
         );
     }
@@ -511,9 +581,9 @@ export default function AppointmentsPage() {
 
     return (
         <>
-            <Stack spacing={3} sx={{ width: "100%" }}>
+            <Stack spacing={3} sx={{width: "100%"}}>
                 <Stack
-                    direction={{ xs: "column", md: "row" }}
+                    direction={{xs: "column", md: "row"}}
                     justifyContent="space-between"
                     spacing={2}
                 >
@@ -522,14 +592,14 @@ export default function AppointmentsPage() {
                             Agendamentos
                         </Typography>
 
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{mt: 1}}>
                             Visão operacional da agenda, com ações rápidas e filtros.
                         </Typography>
                     </Box>
 
                     <Button
                         variant="contained"
-                        startIcon={<AddRoundedIcon />}
+                        startIcon={<AddRoundedIcon/>}
                         onClick={handleOpenCreateModal}
                     >
                         Novo agendamento
@@ -542,7 +612,7 @@ export default function AppointmentsPage() {
                             title="Hoje"
                             value={summary.todayCount}
                             subtitle="Agendamentos do dia"
-                            icon={<TodayRoundedIcon />}
+                            icon={<TodayRoundedIcon/>}
                         />
                     </Grid>
 
@@ -551,7 +621,7 @@ export default function AppointmentsPage() {
                             title="Próximos"
                             value={summary.upcomingCount}
                             subtitle="Agendamentos futuros"
-                            icon={<AccessTimeRoundedIcon />}
+                            icon={<AccessTimeRoundedIcon/>}
                         />
                     </Grid>
 
@@ -560,7 +630,7 @@ export default function AppointmentsPage() {
                             title="Confirmados"
                             value={summary.confirmedCount}
                             subtitle="Prontos para atendimento"
-                            icon={<CheckCircleRoundedIcon />}
+                            icon={<CheckCircleRoundedIcon/>}
                         />
                     </Grid>
 
@@ -569,7 +639,7 @@ export default function AppointmentsPage() {
                             title="Concluídos"
                             value={summary.completedCount}
                             subtitle="Atendimentos concluídos"
-                            icon={<EventRoundedIcon />}
+                            icon={<EventRoundedIcon/>}
                         />
                     </Grid>
                 </Grid>
@@ -676,7 +746,19 @@ export default function AppointmentsPage() {
 
                 <Box component="form" onSubmit={handleCreateAppointment}>
                     <DialogContent>
-                        <Stack spacing={2} sx={{ mt: 1 }}>
+                        <Stack spacing={2} sx={{mt: 1}}>
+                            {clients.length === 0 && (
+                                <Alert severity="warning">
+                                    Cadastre pelo menos um cliente antes de criar um agendamento.
+                                </Alert>
+                            )}
+
+                            {services.length === 0 && (
+                                <Alert severity="warning">
+                                    Cadastre pelo menos um serviço antes de criar um agendamento.
+                                </Alert>
+                            )}
+
                             {formError && <Alert severity="error">{formError}</Alert>}
 
                             <TextField
@@ -687,6 +769,10 @@ export default function AppointmentsPage() {
                                 required
                                 fullWidth
                             >
+                                <MenuItem value="" disabled>
+                                    Selecione um cliente
+                                </MenuItem>
+
                                 {clients.map((client) => (
                                     <MenuItem key={client.id} value={client.id}>
                                         {client.name}
@@ -702,9 +788,29 @@ export default function AppointmentsPage() {
                                 required
                                 fullWidth
                             >
+                                <MenuItem value="" disabled>
+                                    Selecione um serviço
+                                </MenuItem>
+
                                 {services.map((service) => (
                                     <MenuItem key={service.id} value={service.id}>
                                         {service.name}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+
+                            <TextField
+                                select
+                                label="Profissional"
+                                value={staffId}
+                                onChange={(event) => setStaffId(event.target.value)}
+                                fullWidth
+                            >
+                                <MenuItem value="">Sem profissional</MenuItem>
+
+                                {staff.map((member) => (
+                                    <MenuItem key={member.id} value={member.id}>
+                                        {member.name}
                                     </MenuItem>
                                 ))}
                             </TextField>
@@ -716,7 +822,7 @@ export default function AppointmentsPage() {
                                 onChange={(event) => setStartsAt(event.target.value)}
                                 required
                                 fullWidth
-                                InputLabelProps={{ shrink: true }}
+                                InputLabelProps={{shrink: true}}
                             />
 
                             <TextField
@@ -745,7 +851,7 @@ export default function AppointmentsPage() {
                         </Stack>
                     </DialogContent>
 
-                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                    <DialogActions sx={{px: 3, pb: 3}}>
                         <Button onClick={handleCloseCreateModal} disabled={createAppointmentMutation.isPending}>
                             Cancelar
                         </Button>
@@ -753,7 +859,11 @@ export default function AppointmentsPage() {
                         <Button
                             type="submit"
                             variant="contained"
-                            disabled={createAppointmentMutation.isPending}
+                            disabled={
+                                createAppointmentMutation.isPending ||
+                                clients.length === 0 ||
+                                services.length === 0
+                            }
                         >
                             {createAppointmentMutation.isPending ? "Salvando..." : "Salvar"}
                         </Button>
@@ -771,7 +881,7 @@ export default function AppointmentsPage() {
 
                 <Box component="form" onSubmit={handleEditAppointment}>
                     <DialogContent>
-                        <Stack spacing={2} sx={{ mt: 1 }}>
+                        <Stack spacing={2} sx={{mt: 1}}>
                             {formError && <Alert severity="error">{formError}</Alert>}
 
                             <TextField
@@ -782,6 +892,10 @@ export default function AppointmentsPage() {
                                 required
                                 fullWidth
                             >
+                                <MenuItem value="" disabled>
+                                    Selecione um cliente
+                                </MenuItem>
+
                                 {clients.map((client) => (
                                     <MenuItem key={client.id} value={client.id}>
                                         {client.name}
@@ -797,9 +911,29 @@ export default function AppointmentsPage() {
                                 required
                                 fullWidth
                             >
+                                <MenuItem value="" disabled>
+                                    Selecione um serviço
+                                </MenuItem>
+
                                 {services.map((service) => (
                                     <MenuItem key={service.id} value={service.id}>
                                         {service.name}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+
+                            <TextField
+                                select
+                                label="Profissional"
+                                value={staffId}
+                                onChange={(event) => setStaffId(event.target.value)}
+                                fullWidth
+                            >
+                                <MenuItem value="">Sem profissional</MenuItem>
+
+                                {staff.map((member) => (
+                                    <MenuItem key={member.id} value={member.id}>
+                                        {member.name}
                                     </MenuItem>
                                 ))}
                             </TextField>
@@ -811,7 +945,7 @@ export default function AppointmentsPage() {
                                 onChange={(event) => setStartsAt(event.target.value)}
                                 required
                                 fullWidth
-                                InputLabelProps={{ shrink: true }}
+                                InputLabelProps={{shrink: true}}
                             />
 
                             <TextField
@@ -840,7 +974,7 @@ export default function AppointmentsPage() {
                         </Stack>
                     </DialogContent>
 
-                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                    <DialogActions sx={{px: 3, pb: 3}}>
                         <Button onClick={handleCloseEditModal} disabled={updateAppointmentMutation.isPending}>
                             Cancelar
                         </Button>

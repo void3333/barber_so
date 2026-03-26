@@ -4,6 +4,7 @@ export async function createAppointmentRecord({
                                                   barbershopId,
                                                   clientId,
                                                   serviceId,
+                                                  staffId,
                                                   startsAt,
                                                   status,
                                                   notes,
@@ -12,18 +13,23 @@ export async function createAppointmentRecord({
         throw new Error("Barbershop ID is required.");
     }
 
+    const insertPayload = {
+        barbershop_id: barbershopId,
+        client_id: clientId,
+        service_id: serviceId,
+        staff_id: staffId || null,
+        starts_at: startsAt,
+        status,
+        notes: notes || null,
+    };
+
+
     const { data, error } = await supabase
         .from("appointments")
-        .insert({
-            barbershop_id: barbershopId,
-            client_id: clientId,
-            service_id: serviceId,
-            starts_at: startsAt,
-            status,
-            notes: notes || null,
-        })
+        .insert(insertPayload)
         .select()
         .single();
+
 
     if (error) {
         throw error;

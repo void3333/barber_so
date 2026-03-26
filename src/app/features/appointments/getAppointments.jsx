@@ -22,6 +22,12 @@ export async function getAppointments(barbershopId) {
         name,
         duration_minutes,
         price
+      ),
+      staff:staff (
+        id,
+        name,
+        role,
+        is_active
       )
     `)
         .eq("barbershop_id", barbershopId)

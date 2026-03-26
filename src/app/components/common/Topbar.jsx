@@ -119,17 +119,7 @@ export default function Topbar() {
                         }}
                     />
 
-                    {currentPlan.price && (
-                        <Typography
-                            variant="body2"
-                            sx={{
-                                color: "rgba(0,0,0,0.56)",
-                                fontWeight: 600,
-                            }}
-                        >
-                            {currentPlan.price}
-                        </Typography>
-                    )}
+
                 </Stack>
 
                 <Stack

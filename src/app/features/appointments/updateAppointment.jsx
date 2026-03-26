@@ -4,6 +4,7 @@ export async function updateAppointmentRecord({
                                                   id,
                                                   clientId,
                                                   serviceId,
+                                                  staffId,
                                                   startsAt,
                                                   status,
                                                   notes,
@@ -12,11 +13,12 @@ export async function updateAppointmentRecord({
         throw new Error("Appointment ID is required.");
     }
 
-    const { data, error } = await supabase
+    const {data, error} = await supabase
         .from("appointments")
         .update({
             client_id: clientId,
             service_id: serviceId,
+            staff_id: staffId || null,
             starts_at: startsAt,
             status,
             notes: notes || null,
