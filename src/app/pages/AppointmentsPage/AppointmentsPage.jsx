@@ -492,6 +492,7 @@ function AppointmentDialog({
             timeStyle: "short",
         })
         : "Data e hora";
+    const missingSetupWarning = showCreateWarnings && (clients.length === 0 || services.length === 0);
 
     return (
         <Dialog
@@ -504,6 +505,9 @@ function AppointmentDialog({
                     borderRadius: 2,
                     bgcolor: "#fffdfa",
                     overflow: "hidden",
+                    maxHeight: "calc(100vh - 32px)",
+                    display: "flex",
+                    flexDirection: "column",
                 },
             }}
         >
@@ -563,8 +567,23 @@ function AppointmentDialog({
                 </Stack>
             </DialogTitle>
 
-            <Box component="form" onSubmit={onSubmit}>
-                <DialogContent sx={{ p: { xs: 2, md: 2.5 } }}>
+            <Box
+                component="form"
+                onSubmit={onSubmit}
+                sx={{
+                    minHeight: 0,
+                    display: "flex",
+                    flex: 1,
+                    flexDirection: "column",
+                }}
+            >
+                <DialogContent
+                    sx={{
+                        minHeight: 0,
+                        overflowY: "auto",
+                        p: { xs: 2, md: 2.5 },
+                    }}
+                >
                     <Grid container spacing={2.5}>
                         <Grid item xs={12} md={5}>
                             <Box
@@ -647,15 +666,9 @@ function AppointmentDialog({
 
                         <Grid item xs={12} md={7}>
                             <Stack spacing={2}>
-                        {showCreateWarnings && clients.length === 0 && (
+                        {missingSetupWarning && (
                             <Alert severity="warning">
-                                Cadastre pelo menos um cliente antes de criar um agendamento.
-                            </Alert>
-                        )}
-
-                        {showCreateWarnings && services.length === 0 && (
-                            <Alert severity="warning">
-                                Cadastre pelo menos um serviço antes de criar um agendamento.
+                                Cadastre pelo menos um cliente e um serviço antes de criar um agendamento.
                             </Alert>
                         )}
 
@@ -793,7 +806,15 @@ function AppointmentDialog({
                     </Grid>
                 </DialogContent>
 
-                <DialogActions sx={{ px: 3, pb: 3 }}>
+                <DialogActions
+                    sx={{
+                        flexShrink: 0,
+                        px: 3,
+                        py: 2,
+                        borderTop: "1px solid rgba(17,18,20,0.08)",
+                        bgcolor: "#fffdfa",
+                    }}
+                >
                     <Button onClick={onClose} disabled={isSaving} sx={{ borderRadius: 2, textTransform: "none", fontWeight: 800 }}>
                         Cancelar
                     </Button>
