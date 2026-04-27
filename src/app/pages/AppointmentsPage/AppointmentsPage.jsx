@@ -41,12 +41,14 @@ import { useAuth } from "../../hooks/useAuth.js";
 import { getClients } from "../../features/clients/api/getClients.jsx";
 import { getServices } from "../../features/services/api/getServices.jsx";
 import { getStaff } from "../../features/staff/api/getStaff.jsx";
+import { getStaffAvailability } from "../../features/staffAvailability/api/getStaffAvailability.jsx";
 import { getAppointments } from "../../features/appointments/getAppointments.jsx";
 import { createAppointmentRecord } from "../../features/appointments/createAppointment.jsx";
 import { updateAppointmentRecord } from "../../features/appointments/updateAppointment.jsx";
 import { deleteAppointmentRecord } from "../../features/appointments/deleteAppointment.jsx";
+import { getAppointmentAvailabilityError } from "../../features/appointments/utils/getAppointmentAvailabilityError.js";
 import { getAppointmentErrorMessage } from "../../features/appointments/utils/getAppointmentErrorMessage.js";
-import { toUtcIsoFromLocalDateTime } from "../../features/appointments/utils/toUtcIsoFromLocalDateTime.js";
+import { toDatabaseDateTimeFromLocalDateTime } from "../../features/appointments/utils/toUtcIsoFromLocalDateTime.js";
 
 const statusOptions = [
     { value: "scheduled", label: "Agendado" },
@@ -895,6 +897,15 @@ export default function AppointmentsPage() {
         enabled: !!barbershop?.id,
     });
 
+    const {
+        data: selectedStaffAvailability = [],
+        isFetched: selectedStaffAvailabilityFetched,
+    } = useQuery({
+        queryKey: ["staff-availability", staffId],
+        queryFn: () => getStaffAvailability(staffId),
+        enabled: !!staffId,
+    });
+
     const createAppointmentMutation = useMutation({
         mutationFn: createAppointmentRecord,
         onSuccess: async () => {
@@ -967,6 +978,24 @@ export default function AppointmentsPage() {
         resetForm();
     }
 
+    function validateSelectedAvailability() {
+        const availabilityError = getAppointmentAvailabilityError({
+            startsAt,
+            serviceId,
+            staffId,
+            services,
+            availability: selectedStaffAvailability,
+            availabilityFetched: selectedStaffAvailabilityFetched,
+        });
+
+        if (availabilityError) {
+            setFormError(availabilityError);
+            return false;
+        }
+
+        return true;
+    }
+
     async function handleCreateAppointment(event) {
         event.preventDefault();
         setFormError("");
@@ -986,12 +1015,16 @@ export default function AppointmentsPage() {
             return;
         }
 
+        if (!validateSelectedAvailability()) {
+            return;
+        }
+
         await createAppointmentMutation.mutateAsync({
             barbershopId: barbershop.id,
             clientId,
             serviceId,
             staffId,
-            startsAt: toUtcIsoFromLocalDateTime(startsAt),
+            startsAt: toDatabaseDateTimeFromLocalDateTime(startsAt),
             status,
             notes,
         });
@@ -1016,12 +1049,16 @@ export default function AppointmentsPage() {
             return;
         }
 
+        if (!validateSelectedAvailability()) {
+            return;
+        }
+
         await updateAppointmentMutation.mutateAsync({
             id: selectedAppointment.id,
             clientId,
             serviceId,
             staffId,
-            startsAt: toUtcIsoFromLocalDateTime(startsAt),
+            startsAt: toDatabaseDateTimeFromLocalDateTime(startsAt),
             status,
             notes,
         });
