@@ -16,7 +16,7 @@ export async function deleteStaffAvailabilityRecord(id) {
     }
 
     if (!data || data.length === 0) {
-        throw new Error("Nenhum horário foi excluído. Verifique a policy de delete.");
+        throw new Error("Nenhum horário foi excluído. Verifique a política de exclusão.");
     }
 
     return data[0];
