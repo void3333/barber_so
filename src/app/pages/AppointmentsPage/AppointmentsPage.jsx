@@ -35,8 +35,8 @@ import {getAppointments} from "../../features/appointments/getAppointments.jsx";
 import {createAppointmentRecord} from "../../features/appointments/createAppointment.jsx";
 import {updateAppointmentRecord} from "../../features/appointments/updateAppointment.jsx";
 import {deleteAppointmentRecord} from "../../features/appointments/deleteAppointment.jsx";
-import {getAppointmentErrorMessage} from "../../features/appointments/utils/getAppointmentErrorMessage.jsx";
-import {toUtcIsoFromLocalDateTime} from "../../features/appointments/utils/toUtcIsoFromLocalDateTime.jsx";
+import {getAppointmentErrorMessage} from "../../features/appointments/utils/getAppointmentErrorMessage.js";
+import {toUtcIsoFromLocalDateTime} from "../../features/appointments/utils/toUtcIsoFromLocalDateTime.js";
 
 const statusOptions = [
     {value: "scheduled", label: "Agendado"},

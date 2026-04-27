@@ -20,12 +20,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth.js";
 import { getDashboardOverview } from "../../features/dashboard/api/getDashboardOverview.jsx";
 
-const planLabelMap = {
-    starter: "Plano Starter",
-    pro: "Plano Profissional",
-    premium: "Plano Premium",
-};
-
 const statusLabelMap = {
     scheduled: "Agendado",
     confirmed: "Confirmado",
