@@ -482,44 +482,171 @@ function AppointmentDialog({
     disableSubmit,
     showCreateWarnings,
 }) {
+    const selectedClient = clients.find((client) => client.id === clientId);
+    const selectedService = services.find((service) => service.id === serviceId);
+    const selectedStaff = staff.find((member) => member.id === staffId);
+    const selectedStatus = statusMetaMap[status] || statusMetaMap.scheduled;
+    const previewDate = startsAt
+        ? new Date(startsAt).toLocaleString("pt-BR", {
+            dateStyle: "short",
+            timeStyle: "short",
+        })
+        : "Data e hora";
+
     return (
         <Dialog
             open={open}
             onClose={onClose}
             fullWidth
-            maxWidth="sm"
+            maxWidth="md"
             PaperProps={{
                 sx: {
                     borderRadius: 2,
                     bgcolor: "#fffdfa",
+                    overflow: "hidden",
                 },
             }}
         >
-            <DialogTitle sx={{ pb: 1 }}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Box
-                        sx={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: 2,
-                            display: "grid",
-                            placeItems: "center",
-                            bgcolor: "rgba(196,138,63,0.14)",
-                            color: "#7a4f1f",
-                        }}
-                    >
-                        <CalendarMonthRoundedIcon />
-                    </Box>
+            <DialogTitle
+                sx={{
+                    p: 0,
+                    bgcolor: "#17181b",
+                    color: "#fff",
+                }}
+            >
+                <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={2}
+                    justifyContent="space-between"
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    sx={{ p: 2.5 }}
+                >
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box
+                            sx={{
+                                width: 42,
+                                height: 42,
+                                borderRadius: 2,
+                                display: "grid",
+                                placeItems: "center",
+                                bgcolor: "rgba(216,155,73,0.16)",
+                                color: "#d89b49",
+                                flexShrink: 0,
+                            }}
+                        >
+                            <CalendarMonthRoundedIcon />
+                        </Box>
 
-                    <Typography variant="h6" fontWeight={900}>
-                        {title}
-                    </Typography>
+                        <Box>
+                            <Typography variant="h6" fontWeight={900}>
+                                {title}
+                            </Typography>
+
+                            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.64)" }}>
+                                Monte o atendimento e revise a prévia antes de salvar.
+                            </Typography>
+                        </Box>
+                    </Stack>
+
+                    <Chip
+                        icon={selectedStatus.icon}
+                        label={selectedStatus.label}
+                        sx={{
+                            borderRadius: 2,
+                            color: "#fff",
+                            bgcolor: "rgba(255,255,255,0.1)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            fontWeight: 850,
+                            "& .MuiChip-icon": { color: "#d89b49" },
+                        }}
+                    />
                 </Stack>
             </DialogTitle>
 
             <Box component="form" onSubmit={onSubmit}>
-                <DialogContent>
-                    <Stack spacing={2} sx={{ mt: 1 }}>
+                <DialogContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                    <Grid container spacing={2.5}>
+                        <Grid item xs={12} md={5}>
+                            <Box
+                                sx={{
+                                    height: "100%",
+                                    minHeight: 260,
+                                    p: 2.2,
+                                    borderRadius: 2,
+                                    bgcolor: "rgba(17,18,20,0.035)",
+                                    border: "1px solid rgba(17,18,20,0.08)",
+                                }}
+                            >
+                                <Stack spacing={2.2} sx={{ height: "100%" }}>
+                                    <Box>
+                                        <Typography variant="body2" fontWeight={850} sx={{ color: "rgba(17,18,20,0.58)" }}>
+                                            Prévia do agendamento
+                                        </Typography>
+
+                                        <Typography variant="h5" fontWeight={900} sx={{ mt: 0.6, color: "#17181b" }}>
+                                            {previewDate}
+                                        </Typography>
+                                    </Box>
+
+                                    <Divider />
+
+                                    <Stack spacing={1.5}>
+                                        <Stack direction="row" spacing={1.2} alignItems="center">
+                                            <PersonRoundedIcon sx={{ color: "#1f6f68" }} />
+                                            <Box sx={{ minWidth: 0 }}>
+                                                <Typography variant="caption" sx={{ color: "rgba(17,18,20,0.52)" }}>
+                                                    Cliente
+                                                </Typography>
+                                                <Typography fontWeight={850} noWrap>
+                                                    {selectedClient?.name || "Selecione um cliente"}
+                                                </Typography>
+                                            </Box>
+                                        </Stack>
+
+                                        <Stack direction="row" spacing={1.2} alignItems="center">
+                                            <ContentCutRoundedIcon sx={{ color: "#7a4f1f" }} />
+                                            <Box sx={{ minWidth: 0 }}>
+                                                <Typography variant="caption" sx={{ color: "rgba(17,18,20,0.52)" }}>
+                                                    Serviço
+                                                </Typography>
+                                                <Typography fontWeight={850} noWrap>
+                                                    {selectedService?.name || "Selecione um serviço"}
+                                                </Typography>
+                                            </Box>
+                                        </Stack>
+
+                                        <Stack direction="row" spacing={1.2} alignItems="center">
+                                            <CheckCircleRoundedIcon sx={{ color: selectedStatus.color }} />
+                                            <Box sx={{ minWidth: 0 }}>
+                                                <Typography variant="caption" sx={{ color: "rgba(17,18,20,0.52)" }}>
+                                                    Profissional
+                                                </Typography>
+                                                <Typography fontWeight={850} noWrap>
+                                                    {selectedStaff?.name || "Sem profissional"}
+                                                </Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Stack>
+
+                                    <Box sx={{ flex: 1 }} />
+
+                                    <Chip
+                                        label={selectedStatus.plural}
+                                        sx={{
+                                            width: "fit-content",
+                                            borderRadius: 2,
+                                            color: selectedStatus.color,
+                                            bgcolor: selectedStatus.bg,
+                                            border: `1px solid ${selectedStatus.border}`,
+                                            fontWeight: 850,
+                                        }}
+                                    />
+                                </Stack>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12} md={7}>
+                            <Stack spacing={2}>
                         {showCreateWarnings && clients.length === 0 && (
                             <Alert severity="warning">
                                 Cadastre pelo menos um cliente antes de criar um agendamento.
@@ -534,7 +661,12 @@ function AppointmentDialog({
 
                         {formError && <Alert severity="error">{formError}</Alert>}
 
-                        <Grid container spacing={2}>
+                        <Box>
+                            <Typography fontWeight={900} sx={{ color: "#17181b", mb: 1.5 }}>
+                                Dados do atendimento
+                            </Typography>
+
+                            <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <TextField
                                     select
@@ -607,23 +739,6 @@ function AppointmentDialog({
                                 />
                             </Grid>
 
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    select
-                                    label="Status"
-                                    value={status}
-                                    onChange={(event) => setStatus(event.target.value)}
-                                    required
-                                    fullWidth
-                                >
-                                    {statusOptions.map((option) => (
-                                        <MenuItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
-                            </Grid>
-
                             <Grid item xs={12}>
                                 <TextField
                                     label="Observações"
@@ -634,8 +749,48 @@ function AppointmentDialog({
                                     minRows={3}
                                 />
                             </Grid>
+                            </Grid>
+                        </Box>
+
+                        <Box>
+                            <Typography fontWeight={900} sx={{ color: "#17181b", mb: 1.2 }}>
+                                Status
+                            </Typography>
+
+                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                {statusOptions.map((option) => {
+                                    const meta = statusMetaMap[option.value];
+                                    const isSelected = status === option.value;
+
+                                    return (
+                                        <Button
+                                            key={option.value}
+                                            type="button"
+                                            variant={isSelected ? "contained" : "outlined"}
+                                            startIcon={meta.icon}
+                                            onClick={() => setStatus(option.value)}
+                                            sx={{
+                                                borderRadius: 2,
+                                                textTransform: "none",
+                                                fontWeight: 850,
+                                                color: isSelected ? "#fff" : meta.color,
+                                                bgcolor: isSelected ? meta.color : "transparent",
+                                                borderColor: meta.border,
+                                                "&:hover": {
+                                                    bgcolor: isSelected ? meta.color : meta.bg,
+                                                    borderColor: meta.border,
+                                                },
+                                            }}
+                                        >
+                                            {option.label}
+                                        </Button>
+                                    );
+                                })}
+                            </Stack>
+                        </Box>
+                            </Stack>
                         </Grid>
-                    </Stack>
+                    </Grid>
                 </DialogContent>
 
                 <DialogActions sx={{ px: 3, pb: 3 }}>
