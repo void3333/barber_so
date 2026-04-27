@@ -13,7 +13,7 @@ Crie um arquivo `.env` na raiz com:
 
 ```bash
 VITE_SUPABASE_URL=https://<seu-projeto>.supabase.co
-VITE_SUPABASE_ANON_KEY=<sua-chave-anon>
+VITE_SUPABASE_PUBLISHABLE_KEY=<sua-chave-publicável>
 ```
 
 Sem essas variáveis, a aplicação lança erro na inicialização do cliente Supabase.

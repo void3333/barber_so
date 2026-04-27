@@ -2,7 +2,7 @@ import {supabase} from "../../../lib/supabase.js";
 
 export async function deleteServiceRecord(id) {
     if (!id) {
-        throw new Error("Service ID is required.");
+        throw new Error("ID do serviço é obrigatório.");
     }
 
     const { data, error } = await supabase
