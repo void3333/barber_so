@@ -679,8 +679,21 @@ function AppointmentDialog({
                                 Dados do atendimento
                             </Typography>
 
-                            <Grid container spacing={2}>
-                            <Grid item xs={12}>
+                            <Box
+                                sx={{
+                                    display: "grid",
+                                    gridTemplateColumns: {
+                                        xs: "1fr",
+                                        sm: "repeat(2, minmax(0, 1fr))",
+                                    },
+                                    gap: 2,
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                        bgcolor: "#fff",
+                                    },
+                                }}
+                            >
+                            <Box sx={{ gridColumn: "1 / -1" }}>
                                 <TextField
                                     select
                                     label="Cliente"
@@ -699,9 +712,9 @@ function AppointmentDialog({
                                         </MenuItem>
                                     ))}
                                 </TextField>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} md={6}>
+                            <Box>
                                 <TextField
                                     select
                                     label="Serviço"
@@ -720,9 +733,9 @@ function AppointmentDialog({
                                         </MenuItem>
                                     ))}
                                 </TextField>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} md={6}>
+                            <Box>
                                 <TextField
                                     select
                                     label="Profissional"
@@ -738,9 +751,9 @@ function AppointmentDialog({
                                         </MenuItem>
                                     ))}
                                 </TextField>
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12} md={6}>
+                            <Box>
                                 <TextField
                                     label="Data e hora"
                                     type="datetime-local"
@@ -750,19 +763,19 @@ function AppointmentDialog({
                                     fullWidth
                                     InputLabelProps={{ shrink: true }}
                                 />
-                            </Grid>
+                            </Box>
 
-                            <Grid item xs={12}>
+                            <Box>
                                 <TextField
                                     label="Observações"
                                     value={notes}
                                     onChange={(event) => setNotes(event.target.value)}
                                     fullWidth
                                     multiline
-                                    minRows={3}
+                                    minRows={2}
                                 />
-                            </Grid>
-                            </Grid>
+                            </Box>
+                            </Box>
                         </Box>
 
                         <Box>
