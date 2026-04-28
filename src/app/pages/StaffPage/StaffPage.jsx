@@ -1,4 +1,4 @@
-import {useMemo, useState} from "react";
+import { useMemo, useState } from "react";
 import {
     Alert,
     Box,
@@ -11,34 +11,45 @@ import {
     DialogTitle,
     FormControlLabel,
     IconButton,
+    InputAdornment,
     MenuItem,
     Stack,
     Switch,
     TextField,
+    Tooltip,
     Typography,
 } from "@mui/material";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {MaterialReactTable, useMaterialReactTable} from "material-react-table";
-import {MRT_Localization_PT_BR} from "material-react-table/locales/pt-BR";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
+import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MaterialReactTable, useMaterialReactTable } from "material-react-table";
+import { MRT_Localization_PT_BR } from "material-react-table/locales/pt-BR";
 import Swal from "sweetalert2";
-import {useAuth} from "../../hooks/useAuth.js";
-import {getStaff} from "../../features/staff/api/getStaff.jsx";
-import {createStaffRecord} from "../../features/staff/api/createStaff.jsx";
-import {updateStaffRecord} from "../../features/staff/api/updateStaff.jsx";
-import {deleteStaffRecord} from "../../features/staff/api/deleteStaff.jsx";
-import {getStaffAvailability} from "../../features/staffAvailability/api/getStaffAvailability.jsx";
-import {createStaffAvailabilityRecord} from "../../features/staffAvailability/api/createStaffAvailability.jsx";
-import {updateStaffAvailabilityRecord} from "../../features/staffAvailability/api/updateStaffAvailability.jsx";
-import {deleteStaffAvailabilityRecord} from "../../features/staffAvailability/api/deleteStaffAvailability.jsx";
+import { useAuth } from "../../hooks/useAuth.js";
+import { getStaff } from "../../features/staff/api/getStaff.jsx";
+import { createStaffRecord } from "../../features/staff/api/createStaff.jsx";
+import { updateStaffRecord } from "../../features/staff/api/updateStaff.jsx";
+import { deleteStaffRecord } from "../../features/staff/api/deleteStaff.jsx";
+import { DataTableShell, MetricCard } from "../../components/common/ManagementPage.jsx";
+import { getStaffAvailability } from "../../features/staffAvailability/api/getStaffAvailability.jsx";
+import { createStaffAvailabilityRecord } from "../../features/staffAvailability/api/createStaffAvailability.jsx";
+import { updateStaffAvailabilityRecord } from "../../features/staffAvailability/api/updateStaffAvailability.jsx";
+import { deleteStaffAvailabilityRecord } from "../../features/staffAvailability/api/deleteStaffAvailability.jsx";
 
 const roleOptions = [
-    {value: "admin", label: "Administrador"},
-    {value: "manager", label: "Gerente"},
-    {value: "barber", label: "Barbeiro"},
-    {value: "reception", label: "Recepção"},
+    { value: "admin", label: "Administrador" },
+    { value: "manager", label: "Gerente" },
+    { value: "barber", label: "Barbeiro" },
+    { value: "reception", label: "Recepção" },
 ];
 
 const roleLabelMap = {
@@ -50,13 +61,13 @@ const roleLabelMap = {
 };
 
 const weekdayOptions = [
-    {value: 0, label: "Domingo"},
-    {value: 1, label: "Segunda"},
-    {value: 2, label: "Terça"},
-    {value: 3, label: "Quarta"},
-    {value: 4, label: "Quinta"},
-    {value: 5, label: "Sexta"},
-    {value: 6, label: "Sábado"},
+    { value: 0, label: "Domingo" },
+    { value: 1, label: "Segunda" },
+    { value: 2, label: "Terça" },
+    { value: 3, label: "Quarta" },
+    { value: 4, label: "Quinta" },
+    { value: 5, label: "Sexta" },
+    { value: 6, label: "Sábado" },
 ];
 
 const weekdayLabelMap = {
@@ -69,8 +80,308 @@ const weekdayLabelMap = {
     6: "Sábado",
 };
 
+function getInitials(name) {
+    if (!name) return "EQ";
+
+    return name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
+}
+
+function formatDate(value) {
+    if (!value) return "Sem data";
+
+    return new Date(value).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    });
+}
+
+function PageHero({ totalStaff, activeStaff, barbersCount, onCreate }) {
+    return (
+        <Box
+            sx={{
+                borderRadius: 2,
+                p: { xs: 2.5, md: 3 },
+                bgcolor: "#17181b",
+                color: "#fff",
+                boxShadow: "0 18px 42px rgba(17,18,20,0.14)",
+                border: "1px solid rgba(255,255,255,0.08)",
+            }}
+        >
+            <Stack
+                direction={{ xs: "column", md: "row" }}
+                spacing={2.5}
+                justifyContent="space-between"
+                alignItems={{ xs: "stretch", md: "center" }}
+            >
+                <Stack spacing={1.5}>
+                    <Chip
+                        icon={<GroupsRoundedIcon sx={{ fontSize: 18 }} />}
+                        label={`${totalStaff} profissional(is)`}
+                        sx={{
+                            width: "fit-content",
+                            borderRadius: 2,
+                            color: "#ffd69a",
+                            bgcolor: "rgba(216,155,73,0.14)",
+                            border: "1px solid rgba(216,155,73,0.25)",
+                            fontWeight: 850,
+                            "& .MuiChip-icon": { color: "#d89b49" },
+                        }}
+                    />
+
+                    <Box>
+                        <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1.12 }}>
+                            Equipe
+                        </Typography>
+
+                        <Typography sx={{ mt: 1, color: "rgba(255,255,255,0.68)" }}>
+                            Gerencie profissionais, funções e disponibilidade de atendimento em um só lugar.
+                        </Typography>
+                    </Box>
+                </Stack>
+
+                <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={1.5}
+                    alignItems={{ xs: "stretch", sm: "center" }}
+                >
+                    <Box
+                        sx={{
+                            minWidth: 118,
+                            px: 2,
+                            py: 1.4,
+                            borderRadius: 2,
+                            bgcolor: "rgba(255,255,255,0.07)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                        }}
+                    >
+                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.58)", fontWeight: 800 }}>
+                            Ativos
+                        </Typography>
+                        <Typography fontWeight={900}>{activeStaff}</Typography>
+                    </Box>
+
+                    <Box
+                        sx={{
+                            minWidth: 118,
+                            px: 2,
+                            py: 1.4,
+                            borderRadius: 2,
+                            bgcolor: "rgba(255,255,255,0.07)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                        }}
+                    >
+                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.58)", fontWeight: 800 }}>
+                            Barbeiros
+                        </Typography>
+                        <Typography fontWeight={900}>{barbersCount}</Typography>
+                    </Box>
+
+                    <Button
+                        variant="contained"
+                        size="large"
+                        startIcon={<AddRoundedIcon />}
+                        onClick={onCreate}
+                        sx={{
+                            minWidth: 198,
+                            minHeight: 50,
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontWeight: 900,
+                            whiteSpace: "nowrap",
+                            bgcolor: "#d89b49",
+                            color: "#17181b",
+                            boxShadow: "none",
+                            "&:hover": {
+                                bgcolor: "#e1aa60",
+                                boxShadow: "none",
+                            },
+                        }}
+                    >
+                        Novo profissional
+                    </Button>
+                </Stack>
+            </Stack>
+        </Box>
+    );
+}
+
+function StaffDialog({
+    open,
+    title,
+    subtitle,
+    submitLabel,
+    isSaving,
+    onClose,
+    onSubmit,
+    formError,
+    name,
+    setName,
+    role,
+    setRole,
+    phone,
+    setPhone,
+    isActive,
+    setIsActive,
+}) {
+    return (
+        <Dialog
+            open={open}
+            onClose={onClose}
+            fullWidth
+            maxWidth="sm"
+            PaperProps={{
+                sx: {
+                    borderRadius: 2,
+                    bgcolor: "#fffdfa",
+                    overflow: "hidden",
+                },
+            }}
+        >
+            <DialogTitle sx={{ p: 0, bgcolor: "#17181b", color: "#fff" }}>
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ p: 2.5 }}>
+                    <Box
+                        sx={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: 2,
+                            display: "grid",
+                            placeItems: "center",
+                            bgcolor: "rgba(216,155,73,0.16)",
+                            color: "#d89b49",
+                            flexShrink: 0,
+                        }}
+                    >
+                        <PersonRoundedIcon />
+                    </Box>
+
+                    <Box>
+                        <Typography variant="h6" fontWeight={900}>
+                            {title}
+                        </Typography>
+
+                        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.64)" }}>
+                            {subtitle}
+                        </Typography>
+                    </Box>
+                </Stack>
+            </DialogTitle>
+
+            <Box component="form" onSubmit={onSubmit}>
+                <DialogContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                    <Stack spacing={2}>
+                        {formError && <Alert severity="error">{formError}</Alert>}
+
+                        <TextField
+                            label="Nome"
+                            value={name}
+                            onChange={(event) => setName(event.target.value)}
+                            required
+                            fullWidth
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <PersonRoundedIcon />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+
+                        <Box
+                            sx={{
+                                display: "grid",
+                                gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
+                                gap: 2,
+                            }}
+                        >
+                            <TextField
+                                select
+                                label="Cargo"
+                                value={role}
+                                onChange={(event) => setRole(event.target.value)}
+                                required
+                                fullWidth
+                            >
+                                {roleOptions.map((option) => (
+                                    <MenuItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+
+                            <TextField
+                                label="Telefone"
+                                value={phone}
+                                onChange={(event) => setPhone(event.target.value)}
+                                fullWidth
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PhoneRoundedIcon />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                        </Box>
+
+                        <Box
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                bgcolor: "rgba(17,18,20,0.035)",
+                                border: "1px solid rgba(17,18,20,0.08)",
+                            }}
+                        >
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={isActive}
+                                        onChange={(event) => setIsActive(event.target.checked)}
+                                    />
+                                }
+                                label="Profissional ativo"
+                            />
+                        </Box>
+                    </Stack>
+                </DialogContent>
+
+                <DialogActions
+                    sx={{
+                        px: 3,
+                        py: 2,
+                        borderTop: "1px solid rgba(17,18,20,0.08)",
+                    }}
+                >
+                    <Button
+                        onClick={onClose}
+                        disabled={isSaving}
+                        sx={{ borderRadius: 2, textTransform: "none", fontWeight: 800 }}
+                    >
+                        Cancelar
+                    </Button>
+
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={isSaving}
+                        sx={{ borderRadius: 2, textTransform: "none", fontWeight: 850 }}
+                    >
+                        {isSaving ? "Salvando..." : submitLabel}
+                    </Button>
+                </DialogActions>
+            </Box>
+        </Dialog>
+    );
+}
+
 export default function StaffPage() {
-    const {barbershop} = useAuth();
+    const { barbershop } = useAuth();
     const queryClient = useQueryClient();
 
     const [openCreateModal, setOpenCreateModal] = useState(false);
@@ -116,14 +427,8 @@ export default function StaffPage() {
         mutationFn: createStaffRecord,
         onSuccess: async () => {
             handleCloseCreateModal();
-
-            await queryClient.invalidateQueries({
-                queryKey: ["staff", barbershop?.id],
-            });
-
-            await queryClient.refetchQueries({
-                queryKey: ["staff", barbershop?.id],
-            });
+            await queryClient.invalidateQueries({ queryKey: ["staff", barbershop?.id] });
+            await queryClient.refetchQueries({ queryKey: ["staff", barbershop?.id] });
         },
         onError: (mutationError) => {
             setFormError(mutationError.message || "Erro ao criar profissional.");
@@ -134,14 +439,8 @@ export default function StaffPage() {
         mutationFn: updateStaffRecord,
         onSuccess: async () => {
             handleCloseEditModal();
-
-            await queryClient.invalidateQueries({
-                queryKey: ["staff", barbershop?.id],
-            });
-
-            await queryClient.refetchQueries({
-                queryKey: ["staff", barbershop?.id],
-            });
+            await queryClient.invalidateQueries({ queryKey: ["staff", barbershop?.id] });
+            await queryClient.refetchQueries({ queryKey: ["staff", barbershop?.id] });
         },
         onError: (mutationError) => {
             setFormError(mutationError.message || "Erro ao atualizar profissional.");
@@ -151,13 +450,8 @@ export default function StaffPage() {
     const deleteStaffMutation = useMutation({
         mutationFn: deleteStaffRecord,
         onSuccess: async () => {
-            await queryClient.invalidateQueries({
-                queryKey: ["staff", barbershop?.id],
-            });
-
-            await queryClient.refetchQueries({
-                queryKey: ["staff", barbershop?.id],
-            });
+            await queryClient.invalidateQueries({ queryKey: ["staff", barbershop?.id] });
+            await queryClient.refetchQueries({ queryKey: ["staff", barbershop?.id] });
         },
     });
 
@@ -165,14 +459,8 @@ export default function StaffPage() {
         mutationFn: createStaffAvailabilityRecord,
         onSuccess: async () => {
             resetAvailabilityForm();
-
-            await queryClient.invalidateQueries({
-                queryKey: ["staff-availability", selectedStaff?.id],
-            });
-
-            await queryClient.refetchQueries({
-                queryKey: ["staff-availability", selectedStaff?.id],
-            });
+            await queryClient.invalidateQueries({ queryKey: ["staff-availability", selectedStaff?.id] });
+            await queryClient.refetchQueries({ queryKey: ["staff-availability", selectedStaff?.id] });
         },
         onError: (mutationError) => {
             setAvailabilityError(mutationError.message || "Erro ao criar horário.");
@@ -183,14 +471,8 @@ export default function StaffPage() {
         mutationFn: updateStaffAvailabilityRecord,
         onSuccess: async () => {
             resetAvailabilityForm();
-
-            await queryClient.invalidateQueries({
-                queryKey: ["staff-availability", selectedStaff?.id],
-            });
-
-            await queryClient.refetchQueries({
-                queryKey: ["staff-availability", selectedStaff?.id],
-            });
+            await queryClient.invalidateQueries({ queryKey: ["staff-availability", selectedStaff?.id] });
+            await queryClient.refetchQueries({ queryKey: ["staff-availability", selectedStaff?.id] });
         },
         onError: (mutationError) => {
             setAvailabilityError(mutationError.message || "Erro ao atualizar horário.");
@@ -200,13 +482,8 @@ export default function StaffPage() {
     const deleteAvailabilityMutation = useMutation({
         mutationFn: deleteStaffAvailabilityRecord,
         onSuccess: async () => {
-            await queryClient.invalidateQueries({
-                queryKey: ["staff-availability", selectedStaff?.id],
-            });
-
-            await queryClient.refetchQueries({
-                queryKey: ["staff-availability", selectedStaff?.id],
-            });
+            await queryClient.invalidateQueries({ queryKey: ["staff-availability", selectedStaff?.id] });
+            await queryClient.refetchQueries({ queryKey: ["staff-availability", selectedStaff?.id] });
         },
     });
 
@@ -235,7 +512,6 @@ export default function StaffPage() {
 
     function handleCloseCreateModal() {
         if (createStaffMutation.isPending) return;
-
         setOpenCreateModal(false);
         resetForm();
     }
@@ -252,7 +528,6 @@ export default function StaffPage() {
 
     function handleCloseEditModal() {
         if (updateStaffMutation.isPending) return;
-
         setOpenEditModal(false);
         resetForm();
     }
@@ -265,7 +540,6 @@ export default function StaffPage() {
 
     function handleCloseAvailabilityModal() {
         if (createAvailabilityMutation.isPending || updateAvailabilityMutation.isPending) return;
-
         setOpenAvailabilityModal(false);
         resetAvailabilityForm();
     }
@@ -282,7 +556,6 @@ export default function StaffPage() {
     async function handleCreateStaff(event) {
         event.preventDefault();
         setFormError("");
-
         await createStaffMutation.mutateAsync({
             barbershopId: barbershop.id,
             name,
@@ -295,7 +568,6 @@ export default function StaffPage() {
     async function handleEditStaff(event) {
         event.preventDefault();
         setFormError("");
-
         await updateStaffMutation.mutateAsync({
             id: selectedStaff.id,
             name,
@@ -307,27 +579,19 @@ export default function StaffPage() {
 
     async function handleDeleteStaff(staffMember) {
         const result = await Swal.fire({
-            title: "Excluir horário?",
-            text: "Esta faixa de disponibilidade será removida.",
+            title: "Excluir profissional?",
+            text: `O profissional "${staffMember.name}" será removido.`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Excluir",
             cancelButtonText: "Cancelar",
             reverseButtons: true,
-            target: document.body,
-            didOpen: () => {
-                const container = document.querySelector(".swal2-container");
-                if (container) {
-                    container.style.zIndex = "99999";
-                }
-            },
         });
 
         if (!result.isConfirmed) return;
 
         try {
             await deleteStaffMutation.mutateAsync(staffMember.id);
-
             await Swal.fire({
                 title: "Profissional excluído",
                 text: "O profissional foi removido com sucesso.",
@@ -396,19 +660,12 @@ export default function StaffPage() {
 
         try {
             await deleteAvailabilityMutation.mutateAsync(item.id);
-
             await Swal.fire({
                 title: "Horário excluído",
                 text: "A faixa de disponibilidade foi removida com sucesso.",
                 icon: "success",
                 confirmButtonText: "OK",
                 target: document.body,
-                didOpen: () => {
-                    const container = document.querySelector(".swal2-container");
-                    if (container) {
-                        container.style.zIndex = "99999";
-                    }
-                },
             });
         } catch (mutationError) {
             await Swal.fire({
@@ -417,52 +674,164 @@ export default function StaffPage() {
                 icon: "error",
                 confirmButtonText: "OK",
                 target: document.body,
-                didOpen: () => {
-                    const container = document.querySelector(".swal2-container");
-                    if (container) {
-                        container.style.zIndex = "99999";
-                    }
-                },
             });
         }
     }
+
+    const summary = useMemo(() => {
+        const activeStaff = staff.filter((member) => member.is_active).length;
+        const inactiveStaff = staff.filter((member) => !member.is_active).length;
+        const barbersCount = staff.filter((member) => member.role === "barber").length;
+        const latestStaff = [...staff].sort(
+            (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+        )[0];
+
+        return {
+            totalStaff: staff.length,
+            activeStaff,
+            inactiveStaff,
+            barbersCount,
+            latestStaffDate: latestStaff?.created_at,
+        };
+    }, [staff]);
 
     const columns = useMemo(
         () => [
             {
                 accessorKey: "name",
-                header: "Nome",
+                header: "Profissional",
+                size: 270,
+                Cell: ({ row }) => {
+                    const staffMember = row.original;
+
+                    return (
+                        <Stack direction="row" spacing={1.4} alignItems="center" sx={{ minWidth: 0 }}>
+                            <Box
+                                sx={{
+                                    width: 38,
+                                    height: 38,
+                                    borderRadius: 2,
+                                    display: "grid",
+                                    placeItems: "center",
+                                    bgcolor: "rgba(31,111,104,0.12)",
+                                    color: "#1f6f68",
+                                    fontWeight: 900,
+                                    flexShrink: 0,
+                                }}
+                            >
+                                {getInitials(staffMember.name)}
+                            </Box>
+
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography fontWeight={850} noWrap sx={{ color: "#17181b" }}>
+                                    {staffMember.name || "Profissional"}
+                                </Typography>
+
+                                <Typography variant="caption" sx={{ color: "rgba(17,18,20,0.52)" }}>
+                                    {roleLabelMap[staffMember.role] || staffMember.role || "Sem cargo"}
+                                </Typography>
+                            </Box>
+                        </Stack>
+                    );
+                },
             },
             {
                 accessorKey: "role",
                 header: "Cargo",
-                Cell: ({cell}) => roleLabelMap[cell.getValue()] || cell.getValue() || "—",
+                size: 160,
+                Cell: ({ cell }) => (
+                    <Chip
+                        size="small"
+                        icon={<BadgeRoundedIcon sx={{ fontSize: 16 }} />}
+                        label={roleLabelMap[cell.getValue()] || cell.getValue() || "Sem cargo"}
+                        sx={{
+                            borderRadius: 2,
+                            bgcolor: "rgba(196,138,63,0.14)",
+                            color: "#7a4f1f",
+                            fontWeight: 800,
+                            "& .MuiChip-icon": { color: "#7a4f1f" },
+                        }}
+                    />
+                ),
             },
             {
                 accessorKey: "phone",
                 header: "Telefone",
-                Cell: ({cell}) => cell.getValue() || "—",
+                size: 170,
+                Cell: ({ cell }) => {
+                    const value = cell.getValue();
+
+                    if (!value) {
+                        return (
+                            <Chip
+                                size="small"
+                                label="Sem telefone"
+                                sx={{
+                                    borderRadius: 2,
+                                    bgcolor: "rgba(17,18,20,0.06)",
+                                    color: "rgba(17,18,20,0.56)",
+                                    fontWeight: 750,
+                                }}
+                            />
+                        );
+                    }
+
+                    return (
+                        <Chip
+                            size="small"
+                            icon={<PhoneRoundedIcon sx={{ fontSize: 16 }} />}
+                            label={value}
+                            sx={{
+                                borderRadius: 2,
+                                bgcolor: "rgba(54,95,145,0.12)",
+                                color: "#365f91",
+                                fontWeight: 800,
+                                "& .MuiChip-icon": { color: "#365f91" },
+                            }}
+                        />
+                    );
+                },
             },
             {
                 accessorKey: "is_active",
                 header: "Status",
-                Cell: ({cell}) =>
+                size: 140,
+                Cell: ({ cell }) =>
                     cell.getValue() ? (
-                        <Chip label="Ativo" color="success" size="small" variant="outlined"/>
+                        <Chip
+                            label="Ativo"
+                            size="small"
+                            icon={<CheckCircleRoundedIcon sx={{ fontSize: 16 }} />}
+                            sx={{
+                                borderRadius: 2,
+                                bgcolor: "rgba(31,111,104,0.1)",
+                                color: "#1f6f68",
+                                fontWeight: 800,
+                                "& .MuiChip-icon": { color: "#1f6f68" },
+                            }}
+                        />
                     ) : (
-                        <Chip label="Inativo" color="default" size="small" variant="outlined"/>
+                        <Chip
+                            label="Inativo"
+                            size="small"
+                            sx={{
+                                borderRadius: 2,
+                                bgcolor: "rgba(17,18,20,0.06)",
+                                color: "rgba(17,18,20,0.58)",
+                                fontWeight: 800,
+                            }}
+                        />
                     ),
             },
             {
                 accessorKey: "created_at",
                 header: "Criado em",
-                Cell: ({cell}) => {
-                    const value = cell.getValue();
-
-                    if (!value) return "—";
-
-                    return new Date(value).toLocaleDateString("pt-BR");
-                },
+                size: 150,
+                Cell: ({ cell }) => (
+                    <Typography variant="body2" sx={{ color: "rgba(17,18,20,0.64)", fontWeight: 700 }}>
+                        {formatDate(cell.getValue())}
+                    </Typography>
+                ),
             },
         ],
         []
@@ -475,35 +844,108 @@ export default function StaffPage() {
         enableGlobalFilter: true,
         enableColumnFilters: true,
         enableRowActions: true,
+        enableDensityToggle: false,
+        enableFullScreenToggle: false,
+        enableHiding: true,
         positionActionsColumn: "last",
         positionGlobalFilter: "left",
         initialState: {
             showGlobalFilter: true,
             showColumnFilters: false,
+            density: "comfortable",
+        },
+        displayColumnDefOptions: {
+            "mrt-row-actions": {
+                header: "Ações",
+                size: 140,
+            },
+        },
+        muiSearchTextFieldProps: {
+            placeholder: "Buscar profissional, cargo ou telefone",
+            variant: "outlined",
+            size: "small",
+            InputProps: {
+                startAdornment: (
+                    <InputAdornment position="start">
+                        <SearchRoundedIcon />
+                    </InputAdornment>
+                ),
+            },
+            sx: {
+                minWidth: { xs: "100%", sm: 360 },
+                "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: "#fff",
+                },
+            },
         },
         renderTopToolbarCustomActions: () => (
-            <Button variant="contained" onClick={handleOpenCreateModal}>
+            <Button
+                variant="contained"
+                startIcon={<AddRoundedIcon />}
+                onClick={handleOpenCreateModal}
+                sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontWeight: 850,
+                    bgcolor: "#17181b",
+                    boxShadow: "none",
+                    "&:hover": {
+                        bgcolor: "#2a2b2f",
+                        boxShadow: "none",
+                    },
+                }}
+            >
                 Novo profissional
             </Button>
         ),
-        renderRowActions: ({row}) => (
-            <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                <IconButton onClick={() => handleOpenAvailabilityModal(row.original)}>
-                    <AccessTimeRoundedIcon/>
-                </IconButton>
+        renderRowActions: ({ row }) => (
+            <Stack direction="row" spacing={1} alignItems="center">
+                <Tooltip title="Horários">
+                    <span>
+                        <IconButton
+                            onClick={() => handleOpenAvailabilityModal(row.original)}
+                            sx={{
+                                border: "1px solid rgba(196,138,63,0.22)",
+                                bgcolor: "rgba(196,138,63,0.1)",
+                                color: "#7a4f1f",
+                            }}
+                        >
+                            <AccessTimeRoundedIcon />
+                        </IconButton>
+                    </span>
+                </Tooltip>
 
-                <IconButton onClick={() => handleOpenEditModal(row.original)}>
-                    <EditRoundedIcon/>
-                </IconButton>
+                <Tooltip title="Editar profissional">
+                    <span>
+                        <IconButton
+                            onClick={() => handleOpenEditModal(row.original)}
+                            sx={{
+                                border: "1px solid rgba(17,18,20,0.1)",
+                                bgcolor: "rgba(17,18,20,0.03)",
+                            }}
+                        >
+                            <EditRoundedIcon />
+                        </IconButton>
+                    </span>
+                </Tooltip>
 
-                <IconButton
-                    color="error"
-                    onClick={() => handleDeleteStaff(row.original)}
-                    disabled={deleteStaffMutation.isPending}
-                >
-                    <DeleteRoundedIcon/>
-                </IconButton>
-            </Box>
+                <Tooltip title="Excluir profissional">
+                    <span>
+                        <IconButton
+                            color="error"
+                            onClick={() => handleDeleteStaff(row.original)}
+                            disabled={deleteStaffMutation.isPending}
+                            sx={{
+                                border: "1px solid rgba(178,59,59,0.18)",
+                                bgcolor: "rgba(178,59,59,0.07)",
+                            }}
+                        >
+                            <DeleteRoundedIcon />
+                        </IconButton>
+                    </span>
+                </Tooltip>
+            </Stack>
         ),
         muiTablePaperProps: {
             elevation: 0,
@@ -512,11 +954,48 @@ export default function StaffPage() {
                 boxShadow: "none",
                 border: "none",
                 width: "100%",
+                bgcolor: "transparent",
+            },
+        },
+        muiTopToolbarProps: {
+            sx: {
+                bgcolor: "#fffdfa",
+                px: { xs: 1, md: 1.5 },
+                py: 1.2,
+                borderBottom: "1px solid rgba(17,18,20,0.08)",
+                gap: 1,
             },
         },
         muiTableContainerProps: {
             sx: {
                 maxHeight: "none",
+                bgcolor: "#fffdfa",
+            },
+        },
+        muiTableHeadCellProps: {
+            sx: {
+                bgcolor: "rgba(17,18,20,0.035)",
+                color: "rgba(17,18,20,0.66)",
+                fontWeight: 900,
+                borderBottom: "1px solid rgba(17,18,20,0.08)",
+            },
+        },
+        muiTableBodyRowProps: {
+            sx: {
+                "&:hover td": {
+                    bgcolor: "rgba(196,138,63,0.045)",
+                },
+            },
+        },
+        muiTableBodyCellProps: {
+            sx: {
+                borderBottom: "1px solid rgba(17,18,20,0.06)",
+            },
+        },
+        muiBottomToolbarProps: {
+            sx: {
+                bgcolor: "#fffdfa",
+                borderTop: "1px solid rgba(17,18,20,0.08)",
             },
         },
         state: {
@@ -542,219 +1021,208 @@ export default function StaffPage() {
 
     if (isLoading && staff.length === 0) {
         return (
-            <Box sx={{display: "grid", placeItems: "center", py: 6}}>
-                <CircularProgress/>
+            <Box sx={{ display: "grid", placeItems: "center", py: 6 }}>
+                <CircularProgress />
             </Box>
         );
     }
 
+    const metricCards = [
+        {
+            title: "Equipe",
+            value: summary.totalStaff,
+            subtitle: "Profissionais cadastrados",
+            icon: <GroupsRoundedIcon />,
+            color: "#1f6f68",
+            bg: "rgba(31,111,104,0.12)",
+        },
+        {
+            title: "Ativos",
+            value: summary.activeStaff,
+            subtitle: "Disponíveis para operação",
+            icon: <CheckCircleRoundedIcon />,
+            color: "#2f7d32",
+            bg: "rgba(47,125,50,0.12)",
+        },
+        {
+            title: "Barbeiros",
+            value: summary.barbersCount,
+            subtitle: "Função principal",
+            icon: <PersonRoundedIcon />,
+            color: "#7a4f1f",
+            bg: "rgba(196,138,63,0.16)",
+        },
+        {
+            title: "Último cadastro",
+            value: summary.latestStaffDate ? formatDate(summary.latestStaffDate) : "-",
+            subtitle: "Registro mais recente",
+            icon: <EventAvailableRoundedIcon />,
+            color: "#8c3f62",
+            bg: "rgba(140,63,98,0.12)",
+        },
+    ];
+
     return (
         <>
-            <Stack spacing={2} sx={{width: "100%"}}>
-                <Typography variant="h4" fontWeight={700}>
-                    Equipe
-                </Typography>
+            <Stack spacing={3} sx={{ width: "100%" }}>
+                <PageHero
+                    totalStaff={summary.totalStaff}
+                    activeStaff={summary.activeStaff}
+                    barbersCount={summary.barbersCount}
+                    onCreate={handleOpenCreateModal}
+                />
 
-                <Typography variant="body2" color="text.secondary">
-                    Total de profissionais: {staff.length}
-                </Typography>
+                <Box
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                            xs: "1fr",
+                            sm: "repeat(2, minmax(0, 1fr))",
+                            lg: "repeat(4, minmax(0, 1fr))",
+                        },
+                        gap: 2,
+                    }}
+                >
+                    {metricCards.map((card) => (
+                        <MetricCard key={card.title} {...card} />
+                    ))}
+                </Box>
 
-                <MaterialReactTable table={table}/>
+                <DataTableShell
+                    title="Quadro da equipe"
+                    subtitle="Acesse cadastro, status e disponibilidade dos profissionais."
+                    count={summary.totalStaff}
+                    accent="teal"
+                >
+                    <MaterialReactTable table={table} />
+                </DataTableShell>
             </Stack>
 
-            <Dialog
+            <StaffDialog
                 open={openCreateModal}
+                title="Novo profissional"
+                subtitle="Cadastre dados básicos e deixe o profissional pronto para receber horários."
+                submitLabel="Salvar"
+                isSaving={createStaffMutation.isPending}
                 onClose={handleCloseCreateModal}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle>Novo profissional</DialogTitle>
+                onSubmit={handleCreateStaff}
+                formError={formError}
+                name={name}
+                setName={setName}
+                role={role}
+                setRole={setRole}
+                phone={phone}
+                setPhone={setPhone}
+                isActive={isActive}
+                setIsActive={setIsActive}
+            />
 
-                <Box component="form" onSubmit={handleCreateStaff}>
-                    <DialogContent>
-                        <Stack spacing={2} sx={{mt: 1}}>
-                            {formError && <Alert severity="error">{formError}</Alert>}
-
-                            <TextField
-                                label="Nome"
-                                value={name}
-                                onChange={(event) => setName(event.target.value)}
-                                required
-                                fullWidth
-                            />
-
-                            <TextField
-                                select
-                                label="Cargo"
-                                value={role}
-                                onChange={(event) => setRole(event.target.value)}
-                                required
-                                fullWidth
-                            >
-                                {roleOptions.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-
-                            <TextField
-                                label="Telefone"
-                                value={phone}
-                                onChange={(event) => setPhone(event.target.value)}
-                                fullWidth
-                            />
-
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={isActive}
-                                        onChange={(event) => setIsActive(event.target.checked)}
-                                    />
-                                }
-                                label="Profissional ativo"
-                            />
-                        </Stack>
-                    </DialogContent>
-
-                    <DialogActions sx={{px: 3, pb: 3}}>
-                        <Button
-                            onClick={handleCloseCreateModal}
-                            disabled={createStaffMutation.isPending}
-                        >
-                            Cancelar
-                        </Button>
-
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={createStaffMutation.isPending}
-                        >
-                            {createStaffMutation.isPending ? "Salvando..." : "Salvar"}
-                        </Button>
-                    </DialogActions>
-                </Box>
-            </Dialog>
-
-            <Dialog
+            <StaffDialog
                 open={openEditModal}
+                title="Editar profissional"
+                subtitle="Atualize cadastro, função e status da equipe."
+                submitLabel="Salvar alterações"
+                isSaving={updateStaffMutation.isPending}
                 onClose={handleCloseEditModal}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle>Editar profissional</DialogTitle>
-
-                <Box component="form" onSubmit={handleEditStaff}>
-                    <DialogContent>
-                        <Stack spacing={2} sx={{mt: 1}}>
-                            {formError && <Alert severity="error">{formError}</Alert>}
-
-                            <TextField
-                                label="Nome"
-                                value={name}
-                                onChange={(event) => setName(event.target.value)}
-                                required
-                                fullWidth
-                            />
-
-                            <TextField
-                                select
-                                label="Cargo"
-                                value={role}
-                                onChange={(event) => setRole(event.target.value)}
-                                required
-                                fullWidth
-                            >
-                                {roleOptions.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-
-                            <TextField
-                                label="Telefone"
-                                value={phone}
-                                onChange={(event) => setPhone(event.target.value)}
-                                fullWidth
-                            />
-
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={isActive}
-                                        onChange={(event) => setIsActive(event.target.checked)}
-                                    />
-                                }
-                                label="Profissional ativo"
-                            />
-                        </Stack>
-                    </DialogContent>
-
-                    <DialogActions sx={{px: 3, pb: 3}}>
-                        <Button
-                            onClick={handleCloseEditModal}
-                            disabled={updateStaffMutation.isPending}
-                        >
-                            Cancelar
-                        </Button>
-
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={updateStaffMutation.isPending}
-                        >
-                            {updateStaffMutation.isPending ? "Salvando..." : "Salvar alterações"}
-                        </Button>
-                    </DialogActions>
-                </Box>
-            </Dialog>
+                onSubmit={handleEditStaff}
+                formError={formError}
+                name={name}
+                setName={setName}
+                role={role}
+                setRole={setRole}
+                phone={phone}
+                setPhone={setPhone}
+                isActive={isActive}
+                setIsActive={setIsActive}
+            />
 
             <Dialog
                 open={openAvailabilityModal}
                 onClose={handleCloseAvailabilityModal}
                 fullWidth
                 maxWidth="md"
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        bgcolor: "#fffdfa",
+                        overflow: "hidden",
+                        maxHeight: "calc(100vh - 32px)",
+                    },
+                }}
             >
-                <DialogTitle>
-                    Horários de {selectedStaff?.name || "Profissional"}
+                <DialogTitle sx={{ p: 0, bgcolor: "#17181b", color: "#fff" }}>
+                    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ p: 2.5 }}>
+                        <Box
+                            sx={{
+                                width: 42,
+                                height: 42,
+                                borderRadius: 2,
+                                display: "grid",
+                                placeItems: "center",
+                                bgcolor: "rgba(216,155,73,0.16)",
+                                color: "#d89b49",
+                                flexShrink: 0,
+                            }}
+                        >
+                            <AccessTimeRoundedIcon />
+                        </Box>
+
+                        <Box>
+                            <Typography variant="h6" fontWeight={900}>
+                                Horários de {selectedStaff?.name || "Profissional"}
+                            </Typography>
+
+                            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.64)" }}>
+                                Cadastre as faixas de disponibilidade por dia da semana.
+                            </Typography>
+                        </Box>
+                    </Stack>
                 </DialogTitle>
 
-                <DialogContent>
-                    <Stack spacing={3} sx={{mt: 1}}>
+                <DialogContent sx={{ p: { xs: 2, md: 2.5 }, overflowY: "auto" }}>
+                    <Stack spacing={3}>
                         <Box
                             component="form"
                             onSubmit={handleSaveAvailability}
                             sx={{
                                 p: 2,
-                                border: 1,
-                                borderColor: "divider",
                                 borderRadius: 2,
+                                bgcolor: "rgba(17,18,20,0.035)",
+                                border: "1px solid rgba(17,18,20,0.08)",
                             }}
                         >
                             <Stack spacing={2}>
-                                <Typography fontWeight={700}>
+                                <Typography fontWeight={900} sx={{ color: "#17181b" }}>
                                     {selectedAvailability ? "Editar faixa" : "Nova faixa"}
                                 </Typography>
 
                                 {availabilityError && <Alert severity="error">{availabilityError}</Alert>}
 
-                                <TextField
-                                    select
-                                    label="Dia da semana"
-                                    value={availabilityWeekday}
-                                    onChange={(event) => setAvailabilityWeekday(Number(event.target.value))}
-                                    fullWidth
-                                    required
+                                <Box
+                                    sx={{
+                                        display: "grid",
+                                        gridTemplateColumns: {
+                                            xs: "1fr",
+                                            md: "1.2fr 1fr 1fr",
+                                        },
+                                        gap: 2,
+                                    }}
                                 >
-                                    {weekdayOptions.map((option) => (
-                                        <MenuItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
+                                    <TextField
+                                        select
+                                        label="Dia da semana"
+                                        value={availabilityWeekday}
+                                        onChange={(event) => setAvailabilityWeekday(Number(event.target.value))}
+                                        fullWidth
+                                        required
+                                    >
+                                        {weekdayOptions.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
 
-                                <Stack direction={{xs: "column", sm: "row"}} spacing={2}>
                                     <TextField
                                         label="Início"
                                         type="time"
@@ -762,7 +1230,7 @@ export default function StaffPage() {
                                         onChange={(event) => setAvailabilityStartTime(event.target.value)}
                                         fullWidth
                                         required
-                                        InputLabelProps={{shrink: true}}
+                                        InputLabelProps={{ shrink: true }}
                                     />
 
                                     <TextField
@@ -772,52 +1240,63 @@ export default function StaffPage() {
                                         onChange={(event) => setAvailabilityEndTime(event.target.value)}
                                         fullWidth
                                         required
-                                        InputLabelProps={{shrink: true}}
+                                        InputLabelProps={{ shrink: true }}
                                     />
-                                </Stack>
+                                </Box>
 
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={availabilityIsActive}
-                                            onChange={(event) => setAvailabilityIsActive(event.target.checked)}
-                                        />
-                                    }
-                                    label="Faixa ativa"
-                                />
-
-                                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                    {selectedAvailability && (
-                                        <Button onClick={resetAvailabilityForm}>
-                                            Cancelar edição
-                                        </Button>
-                                    )}
-
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        disabled={
-                                            createAvailabilityMutation.isPending || updateAvailabilityMutation.isPending
+                                <Stack
+                                    direction={{ xs: "column", sm: "row" }}
+                                    spacing={1.5}
+                                    justifyContent="space-between"
+                                    alignItems={{ xs: "stretch", sm: "center" }}
+                                >
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={availabilityIsActive}
+                                                onChange={(event) => setAvailabilityIsActive(event.target.checked)}
+                                            />
                                         }
-                                    >
-                                        {createAvailabilityMutation.isPending || updateAvailabilityMutation.isPending
-                                            ? "Salvando..."
-                                            : selectedAvailability
-                                                ? "Salvar alterações"
-                                                : "Adicionar horário"}
-                                    </Button>
+                                        label="Faixa ativa"
+                                    />
+
+                                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                        {selectedAvailability && (
+                                            <Button
+                                                onClick={resetAvailabilityForm}
+                                                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 800 }}
+                                            >
+                                                Cancelar edição
+                                            </Button>
+                                        )}
+
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            disabled={
+                                                createAvailabilityMutation.isPending || updateAvailabilityMutation.isPending
+                                            }
+                                            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 850 }}
+                                        >
+                                            {createAvailabilityMutation.isPending || updateAvailabilityMutation.isPending
+                                                ? "Salvando..."
+                                                : selectedAvailability
+                                                    ? "Salvar alterações"
+                                                    : "Adicionar horário"}
+                                        </Button>
+                                    </Stack>
                                 </Stack>
                             </Stack>
                         </Box>
 
                         <Box>
-                            <Typography variant="h6" fontWeight={700} sx={{mb: 2}}>
+                            <Typography variant="h6" fontWeight={900} sx={{ mb: 2, color: "#17181b" }}>
                                 Disponibilidade cadastrada
                             </Typography>
 
                             {isLoadingAvailability ? (
-                                <Box sx={{display: "grid", placeItems: "center", py: 4}}>
-                                    <CircularProgress/>
+                                <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
+                                    <CircularProgress />
                                 </Box>
                             ) : availability.length === 0 ? (
                                 <Alert severity="info">
@@ -830,34 +1309,72 @@ export default function StaffPage() {
                                             key={item.id}
                                             sx={{
                                                 p: 2,
-                                                border: 1,
-                                                borderColor: "divider",
+                                                border: "1px solid rgba(17,18,20,0.08)",
                                                 borderRadius: 2,
+                                                bgcolor: "rgba(247,244,238,0.62)",
                                                 display: "flex",
                                                 justifyContent: "space-between",
-                                                alignItems: "center",
+                                                alignItems: { xs: "flex-start", sm: "center" },
+                                                flexDirection: { xs: "column", sm: "row" },
                                                 gap: 2,
                                             }}
                                         >
-                                            <Box>
-                                                <Typography fontWeight={700}>
-                                                    {weekdayLabelMap[item.weekday]}
-                                                </Typography>
+                                            <Stack direction="row" spacing={1.4} alignItems="center">
+                                                <Box
+                                                    sx={{
+                                                        width: 42,
+                                                        height: 42,
+                                                        borderRadius: 2,
+                                                        display: "grid",
+                                                        placeItems: "center",
+                                                        bgcolor: "rgba(196,138,63,0.16)",
+                                                        color: "#7a4f1f",
+                                                    }}
+                                                >
+                                                    <AccessTimeRoundedIcon />
+                                                </Box>
 
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {item.start_time} → {item.end_time}
-                                                </Typography>
-                                            </Box>
+                                                <Box>
+                                                    <Typography fontWeight={900}>
+                                                        {weekdayLabelMap[item.weekday]}
+                                                    </Typography>
 
-                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                    <Typography variant="body2" sx={{ color: "rgba(17,18,20,0.58)" }}>
+                                                        {item.start_time} às {item.end_time}
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+
+                                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                                                 {item.is_active ? (
-                                                    <Chip label="Ativo" size="small" color="success"
-                                                          variant="outlined"/>
+                                                    <Chip
+                                                        label="Ativo"
+                                                        size="small"
+                                                        sx={{
+                                                            borderRadius: 2,
+                                                            bgcolor: "rgba(31,111,104,0.1)",
+                                                            color: "#1f6f68",
+                                                            fontWeight: 800,
+                                                        }}
+                                                    />
                                                 ) : (
-                                                    <Chip label="Inativo" size="small" variant="outlined"/>
+                                                    <Chip
+                                                        label="Inativo"
+                                                        size="small"
+                                                        sx={{
+                                                            borderRadius: 2,
+                                                            bgcolor: "rgba(17,18,20,0.06)",
+                                                            color: "rgba(17,18,20,0.58)",
+                                                            fontWeight: 800,
+                                                        }}
+                                                    />
                                                 )}
 
-                                                <Button size="small" onClick={() => handleEditAvailability(item)}>
+                                                <Button
+                                                    size="small"
+                                                    onClick={() => handleEditAvailability(item)}
+                                                    sx={{ borderRadius: 2, textTransform: "none", fontWeight: 800 }}
+                                                >
                                                     Editar
                                                 </Button>
 
@@ -866,6 +1383,7 @@ export default function StaffPage() {
                                                     color="error"
                                                     onClick={() => handleDeleteAvailability(item)}
                                                     disabled={deleteAvailabilityMutation.isPending}
+                                                    sx={{ borderRadius: 2, textTransform: "none", fontWeight: 800 }}
                                                 >
                                                     Excluir
                                                 </Button>
@@ -878,8 +1396,19 @@ export default function StaffPage() {
                     </Stack>
                 </DialogContent>
 
-                <DialogActions sx={{px: 3, pb: 3}}>
-                    <Button onClick={handleCloseAvailabilityModal}>Fechar</Button>
+                <DialogActions
+                    sx={{
+                        px: 3,
+                        py: 2,
+                        borderTop: "1px solid rgba(17,18,20,0.08)",
+                    }}
+                >
+                    <Button
+                        onClick={handleCloseAvailabilityModal}
+                        sx={{ borderRadius: 2, textTransform: "none", fontWeight: 800 }}
+                    >
+                        Fechar
+                    </Button>
                 </DialogActions>
             </Dialog>
         </>

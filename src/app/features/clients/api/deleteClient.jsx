@@ -2,7 +2,7 @@ import {supabase} from "../../../lib/supabase.js";
 
 export async function deleteClientRecord(id) {
     if (!id) {
-        throw new Error("Client ID is required.");
+        throw new Error("ID do cliente é obrigatório.");
     }
 
     const { data, error } = await supabase

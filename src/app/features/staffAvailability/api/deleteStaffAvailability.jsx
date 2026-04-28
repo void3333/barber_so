@@ -2,7 +2,7 @@ import {supabase} from "../../../lib/supabase.js";
 
 export async function deleteStaffAvailabilityRecord(id) {
     if (!id) {
-        throw new Error("Availability ID is required.");
+        throw new Error("ID do horário é obrigatório.");
     }
 
     const { data, error } = await supabase

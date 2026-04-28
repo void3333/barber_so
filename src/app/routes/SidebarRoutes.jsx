@@ -2,51 +2,44 @@ import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import ContentCutRoundedIcon from "@mui/icons-material/ContentCutRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
-
-import DashboardPage from "../pages/Dashboard/DashboardPage.jsx";
-import ClientsPage from "../pages/ClientsPage/ClientsPage.jsx";
-import ServicesPage from "../pages/ServicesPage/ServicesPage.jsx";
-import SettingsPage from "../pages/SettingsPage/SettingsPage.jsx";
-import AppointmentsPage from "../pages/AppointmentsPage/AppointmentsPage.jsx";
-import StaffPage from "../pages/StaffPage/StaffPage.jsx";
+import EventNoteIcon from "@mui/icons-material/EventNote";
+import Diversity3Icon from "@mui/icons-material/Diversity3";
 
 export const sidebarRoutes = [
     {
         path: "/",
         label: "Painel Geral",
-        icon: <DashboardRoundedIcon/>,
-        element: <DashboardPage/>,
+        icon: <DashboardRoundedIcon />,
+        lazy: () => import("../pages/Dashboard/DashboardPage.jsx"),
     },
     {
         path: "/appointments",
         label: "Agendamentos",
-        icon: <EventNoteIcon/>,
-        element: <AppointmentsPage/>,
+        icon: <EventNoteIcon />,
+        lazy: () => import("../pages/AppointmentsPage/AppointmentsPage.jsx"),
     },
     {
         path: "/clients",
         label: "Clientes",
-        icon: <PeopleRoundedIcon/>,
-        element: <ClientsPage/>,
+        icon: <PeopleRoundedIcon />,
+        lazy: () => import("../pages/ClientsPage/ClientsPage.jsx"),
     },
     {
         path: "/services",
         label: "Serviços",
-        icon: <ContentCutRoundedIcon/>,
-        element: <ServicesPage/>,
+        icon: <ContentCutRoundedIcon />,
+        lazy: () => import("../pages/ServicesPage/ServicesPage.jsx"),
     },
     {
         path: "/staff",
         label: "Equipe",
-        icon: <Diversity3Icon/>,
-        element: <StaffPage/>,
+        icon: <Diversity3Icon />,
+        lazy: () => import("../pages/StaffPage/StaffPage.jsx"),
     },
     {
         path: "/settings",
         label: "Configurações",
-        icon: <SettingsRoundedIcon/>,
-        element: <SettingsPage/>,
+        icon: <SettingsRoundedIcon />,
+        lazy: () => import("../pages/SettingsPage/SettingsPage.jsx"),
     },
 ];

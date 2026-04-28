@@ -28,6 +28,7 @@ export async function getDashboardOverview(barbershopId) {
         servicesResult,
         totalAppointmentsResult,
         todayAppointmentsResult,
+        statusAppointmentsResult,
         upcomingAppointmentsResult,
     ] = await Promise.all([
         supabase
@@ -51,6 +52,16 @@ export async function getDashboardOverview(barbershopId) {
             .eq("barbershop_id", barbershopId)
             .gte("starts_at", start)
             .lte("starts_at", end),
+
+        supabase
+            .from("appointments")
+            .select(`
+        status,
+        service:services (
+          price
+        )
+      `)
+            .eq("barbershop_id", barbershopId),
 
         supabase
             .from("appointments")
@@ -79,6 +90,7 @@ export async function getDashboardOverview(barbershopId) {
         servicesResult,
         totalAppointmentsResult,
         todayAppointmentsResult,
+        statusAppointmentsResult,
         upcomingAppointmentsResult,
     ];
 
@@ -89,8 +101,9 @@ export async function getDashboardOverview(barbershopId) {
     }
 
     const upcomingAppointments = upcomingAppointmentsResult.data || [];
+    const statusAppointments = statusAppointmentsResult.data || [];
 
-    const statusSummary = upcomingAppointments.reduce(
+    const statusSummary = statusAppointments.reduce(
         (accumulator, appointment) => {
             const status = appointment.status;
 
@@ -108,6 +121,16 @@ export async function getDashboardOverview(barbershopId) {
             cancelled: 0,
         }
     );
+    const revenueEstimate = statusAppointments.reduce(
+        (sum, appointment) => {
+            if (appointment.status !== "completed") return sum;
+
+            const price = Number(appointment.service?.price);
+
+            return Number.isFinite(price) ? sum + price : sum;
+        },
+        0
+    );
 
     return {
         stats: {
@@ -115,6 +138,7 @@ export async function getDashboardOverview(barbershopId) {
             totalServices: servicesResult.count || 0,
             totalAppointments: totalAppointmentsResult.count || 0,
             todayAppointments: todayAppointmentsResult.count || 0,
+            revenueEstimate,
         },
         upcomingAppointments,
         statusSummary,
