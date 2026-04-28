@@ -3,8 +3,6 @@ import {
     Alert,
     Box,
     Button,
-    Card,
-    CardContent,
     Chip,
     CircularProgress,
     Dialog,
@@ -26,7 +24,6 @@ import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { MRT_Localization_PT_BR } from "material-react-table/locales/pt-BR";
@@ -36,6 +33,7 @@ import { getServices } from "../../features/services/api/getServices.jsx";
 import { createServiceRecord } from "../../features/services/api/createService.jsx";
 import { updateServiceRecord } from "../../features/services/api/updateService.jsx";
 import { deleteServiceRecord } from "../../features/services/api/deleteService.jsx";
+import { DataTableShell, MetricCard } from "../../components/common/ManagementPage.jsx";
 
 function formatCurrency(value) {
     if (value === null || value === undefined || value === "") return "-";
@@ -163,103 +161,6 @@ function PageHero({ totalServices, averageDuration, averagePrice, onCreate }) {
                 </Stack>
             </Stack>
         </Box>
-    );
-}
-
-function MetricCard({ title, value, subtitle, icon, color, bg }) {
-    return (
-        <Card
-            sx={{
-                height: "100%",
-                borderRadius: 2,
-                boxShadow: "0 14px 30px rgba(17,18,20,0.06)",
-                border: "1px solid rgba(17,18,20,0.07)",
-                bgcolor: "#fffdfa",
-            }}
-        >
-            <CardContent sx={{ p: 2.4 }}>
-                <Stack spacing={2}>
-                    <Box
-                        sx={{
-                            width: 42,
-                            height: 42,
-                            borderRadius: 2,
-                            display: "grid",
-                            placeItems: "center",
-                            color,
-                            bgcolor: bg,
-                        }}
-                    >
-                        {icon}
-                    </Box>
-
-                    <Box>
-                        <Typography variant="body2" sx={{ color: "rgba(17,18,20,0.58)", fontWeight: 800 }}>
-                            {title}
-                        </Typography>
-
-                        <Typography variant="h3" fontWeight={900} sx={{ color: "#17181b", lineHeight: 1.05, mt: 0.5 }}>
-                            {value}
-                        </Typography>
-                    </Box>
-
-                    <Typography variant="body2" sx={{ color: "rgba(17,18,20,0.56)" }}>
-                        {subtitle}
-                    </Typography>
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-}
-
-function DataTableShell({ children, totalServices }) {
-    return (
-        <Card
-            sx={{
-                borderRadius: 2,
-                boxShadow: "0 14px 34px rgba(17,18,20,0.06)",
-                border: "1px solid rgba(17,18,20,0.07)",
-                bgcolor: "#fffdfa",
-                overflow: "hidden",
-            }}
-        >
-            <Box
-                sx={{
-                    px: { xs: 2, md: 2.5 },
-                    py: 2,
-                    borderBottom: "1px solid rgba(17,18,20,0.08)",
-                    display: "flex",
-                    alignItems: { xs: "flex-start", sm: "center" },
-                    justifyContent: "space-between",
-                    gap: 2,
-                    flexDirection: { xs: "column", sm: "row" },
-                }}
-            >
-                <Box>
-                    <Typography variant="h6" fontWeight={900} sx={{ color: "#17181b" }}>
-                        Catálogo de serviços
-                    </Typography>
-
-                    <Typography variant="body2" sx={{ color: "rgba(17,18,20,0.56)", mt: 0.3 }}>
-                        Edite preço, duração e mantenha os serviços prontos para a agenda.
-                    </Typography>
-                </Box>
-
-                <Chip
-                    icon={<BadgeRoundedIcon sx={{ fontSize: 17 }} />}
-                    label={`${totalServices} registro(s)`}
-                    sx={{
-                        borderRadius: 2,
-                        color: "#7a4f1f",
-                        bgcolor: "rgba(196,138,63,0.14)",
-                        fontWeight: 850,
-                        "& .MuiChip-icon": { color: "#7a4f1f" },
-                    }}
-                />
-            </Box>
-
-            {children}
-        </Card>
     );
 }
 
@@ -935,7 +836,12 @@ export default function ServicesPage() {
                     ))}
                 </Box>
 
-                <DataTableShell totalServices={summary.totalServices}>
+                <DataTableShell
+                    title="Catalogo de servicos"
+                    subtitle="Edite preco, duracao e mantenha os servicos prontos para a agenda."
+                    count={summary.totalServices}
+                    accent="amber"
+                >
                     <MaterialReactTable table={table} />
                 </DataTableShell>
             </Stack>

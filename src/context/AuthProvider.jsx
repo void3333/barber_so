@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./auth-context";
 import { supabase } from "../app/lib/supabase.js";
 
@@ -50,52 +50,54 @@ export function AuthProvider({ children }) {
         return data;
     }
 
+    const hydrateUser = useCallback(async (nextSession) => {
+        const nextUser = nextSession?.user ?? null;
+
+        setSession(nextSession ?? null);
+        setUser(nextUser);
+
+        if (!nextUser) {
+            setProfile(null);
+            setMembership(null);
+            setBarbershop(null);
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const [profileData, membershipData] = await Promise.all([
+                fetchProfile(nextUser.id),
+                fetchMembership(nextUser.id),
+            ]);
+
+            setProfile(profileData);
+            setMembership(membershipData);
+            setBarbershop(membershipData?.barbershop ?? null);
+        } catch (error) {
+            console.error("HYDRATE USER ERROR:", error);
+
+            setProfile(null);
+            setMembership(null);
+            setBarbershop(null);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const refreshAuth = useCallback(async () => {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+            console.error("SESSION ERROR:", error);
+        }
+
+        await hydrateUser(data?.session ?? null);
+    }, [hydrateUser]);
+
     useEffect(() => {
         let isMounted = true;
-
-        async function hydrateUser(nextSession) {
-            const nextUser = nextSession?.user ?? null;
-
-            if (!isMounted) return;
-
-            setSession(nextSession ?? null);
-            setUser(nextUser);
-
-            if (!nextUser) {
-                setProfile(null);
-                setMembership(null);
-                setBarbershop(null);
-                setLoading(false);
-                return;
-            }
-
-            setLoading(true);
-
-            try {
-                const [profileData, membershipData] = await Promise.all([
-                    fetchProfile(nextUser.id),
-                    fetchMembership(nextUser.id),
-                ]);
-
-                if (!isMounted) return;
-
-                setProfile(profileData);
-                setMembership(membershipData);
-                setBarbershop(membershipData?.barbershop ?? null);
-            } catch (error) {
-                console.error("HYDRATE USER ERROR:", error);
-
-                if (!isMounted) return;
-
-                setProfile(null);
-                setMembership(null);
-                setBarbershop(null);
-            } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
-            }
-        }
 
         async function bootstrap() {
             try {
@@ -105,7 +107,9 @@ export function AuthProvider({ children }) {
                     console.error("SESSION ERROR:", error);
                 }
 
-                await hydrateUser(data?.session ?? null);
+                if (isMounted) {
+                    await hydrateUser(data?.session ?? null);
+                }
             } catch (error) {
                 console.error("BOOTSTRAP ERROR:", error);
 
@@ -121,7 +125,9 @@ export function AuthProvider({ children }) {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, nextSession) => {
             setTimeout(() => {
-                hydrateUser(nextSession);
+                if (isMounted) {
+                    hydrateUser(nextSession);
+                }
             }, 0);
         });
 
@@ -129,7 +135,7 @@ export function AuthProvider({ children }) {
             isMounted = false;
             subscription.unsubscribe();
         };
-    }, []);
+    }, [hydrateUser]);
 
     const value = useMemo(() => {
         return {
@@ -140,8 +146,9 @@ export function AuthProvider({ children }) {
             barbershop,
             loading,
             isAuthenticated: !!user,
+            refreshAuth,
         };
-    }, [user, session, profile, membership, barbershop, loading]);
+    }, [user, session, profile, membership, barbershop, loading, refreshAuth]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

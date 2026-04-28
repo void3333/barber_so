@@ -469,6 +469,7 @@ function AppointmentDialog({
     services,
     staff,
     formError,
+    availabilityFeedback,
     clientId,
     setClientId,
     serviceId,
@@ -488,6 +489,11 @@ function AppointmentDialog({
     const selectedService = services.find((service) => service.id === serviceId);
     const selectedStaff = staff.find((member) => member.id === staffId);
     const selectedStatus = statusMetaMap[status] || statusMetaMap.scheduled;
+    const availabilityColor = availabilityFeedback?.severity === "success"
+        ? "#2f7d32"
+        : availabilityFeedback?.severity === "info"
+            ? "#1976d2"
+            : "#b23b3b";
     const previewDate = startsAt
         ? new Date(startsAt).toLocaleString("pt-BR", {
             dateStyle: "short",
@@ -763,7 +769,26 @@ function AppointmentDialog({
                                     onChange={(event) => setStartsAt(event.target.value)}
                                     required
                                     fullWidth
+                                    color={availabilityFeedback?.severity === "success" ? "success" : "primary"}
+                                    focused={!!availabilityFeedback}
                                     InputLabelProps={{ shrink: true }}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": availabilityFeedback
+                                            ? {
+                                                bgcolor: availabilityFeedback.severity === "success"
+                                                    ? "rgba(47,125,50,0.05)"
+                                                    : availabilityFeedback.severity === "info"
+                                                        ? "rgba(25,118,210,0.05)"
+                                                        : "rgba(178,59,59,0.05)",
+                                                "& fieldset": {
+                                                    borderColor: availabilityColor,
+                                                },
+                                                "&:hover fieldset": {
+                                                    borderColor: availabilityColor,
+                                                },
+                                            }
+                                            : undefined,
+                                    }}
                                 />
                             </Box>
 
@@ -779,6 +804,12 @@ function AppointmentDialog({
                             </Box>
                             </Box>
                         </Box>
+
+                        {availabilityFeedback && (
+                            <Alert severity={availabilityFeedback.severity}>
+                                {availabilityFeedback.message}
+                            </Alert>
+                        )}
 
                         <Box>
                             <Typography fontWeight={900} sx={{ color: "#17181b", mb: 1.2 }}>
@@ -905,6 +936,45 @@ export default function AppointmentsPage() {
         queryFn: () => getStaffAvailability(staffId),
         enabled: !!staffId,
     });
+
+    const availabilityFeedback = useMemo(() => {
+        if (!staffId || !startsAt) return null;
+
+        if (!selectedStaffAvailabilityFetched) {
+            return {
+                severity: "info",
+                message: "Conferindo disponibilidade do barbeiro para essa data e hora...",
+            };
+        }
+
+        const availabilityError = getAppointmentAvailabilityError({
+            startsAt,
+            serviceId,
+            staffId,
+            services,
+            availability: selectedStaffAvailability,
+            availabilityFetched: selectedStaffAvailabilityFetched,
+        });
+
+        if (availabilityError) {
+            return {
+                severity: "error",
+                message: availabilityError,
+            };
+        }
+
+        return {
+            severity: "success",
+            message: "Horario disponivel: o barbeiro pode atender nessa data e hora.",
+        };
+    }, [
+        selectedStaffAvailability,
+        selectedStaffAvailabilityFetched,
+        serviceId,
+        services,
+        staffId,
+        startsAt,
+    ]);
 
     const createAppointmentMutation = useMutation({
         mutationFn: createAppointmentRecord,
@@ -1496,6 +1566,7 @@ export default function AppointmentsPage() {
                 services={services}
                 staff={staff}
                 formError={formError}
+                availabilityFeedback={availabilityFeedback}
                 clientId={clientId}
                 setClientId={setClientId}
                 serviceId={serviceId}
@@ -1527,6 +1598,7 @@ export default function AppointmentsPage() {
                 services={services}
                 staff={staff}
                 formError={formError}
+                availabilityFeedback={availabilityFeedback}
                 clientId={clientId}
                 setClientId={setClientId}
                 serviceId={serviceId}

@@ -75,7 +75,7 @@ export function getAppointmentAvailabilityError({
         .filter((range) => range.start !== null && range.end !== null);
 
     if (dayRanges.length === 0) {
-        return `O profissional nao possui disponibilidade ativa para ${weekdayNames[dateTime.weekday]}.`;
+        return `Essa data nao pode ser usada: o barbeiro nao possui disponibilidade ativa para ${weekdayNames[dateTime.weekday]}.`;
     }
 
     const isInsideRange = dayRanges.some((range) => (
@@ -88,5 +88,5 @@ export function getAppointmentAvailabilityError({
     const rangesText = dayRanges.map((range) => `${formatMinutes(range.start)} as ${formatMinutes(range.end)}`).join(", ");
     const durationText = duration > 0 ? ` considerando ${duration} min de servico` : "";
 
-    return `Esse horario fica fora da disponibilidade de ${weekdayLabels[dateTime.weekday]} (${rangesText})${durationText}.`;
+    return `Essa data e hora nao podem ser usadas: o horario fica fora da disponibilidade do barbeiro em ${weekdayLabels[dateTime.weekday]} (${rangesText})${durationText}.`;
 }

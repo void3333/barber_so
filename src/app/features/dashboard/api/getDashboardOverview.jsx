@@ -28,6 +28,7 @@ export async function getDashboardOverview(barbershopId) {
         servicesResult,
         totalAppointmentsResult,
         todayAppointmentsResult,
+        statusAppointmentsResult,
         upcomingAppointmentsResult,
     ] = await Promise.all([
         supabase
@@ -51,6 +52,11 @@ export async function getDashboardOverview(barbershopId) {
             .eq("barbershop_id", barbershopId)
             .gte("starts_at", start)
             .lte("starts_at", end),
+
+        supabase
+            .from("appointments")
+            .select("status")
+            .eq("barbershop_id", barbershopId),
 
         supabase
             .from("appointments")
@@ -79,6 +85,7 @@ export async function getDashboardOverview(barbershopId) {
         servicesResult,
         totalAppointmentsResult,
         todayAppointmentsResult,
+        statusAppointmentsResult,
         upcomingAppointmentsResult,
     ];
 
@@ -89,8 +96,9 @@ export async function getDashboardOverview(barbershopId) {
     }
 
     const upcomingAppointments = upcomingAppointmentsResult.data || [];
+    const statusAppointments = statusAppointmentsResult.data || [];
 
-    const statusSummary = upcomingAppointments.reduce(
+    const statusSummary = statusAppointments.reduce(
         (accumulator, appointment) => {
             const status = appointment.status;
 
