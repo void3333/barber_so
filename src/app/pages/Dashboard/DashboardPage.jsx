@@ -20,6 +20,7 @@ import AssignmentTurnedInRoundedIcon from "@mui/icons-material/AssignmentTurnedI
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
+import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth.js";
 import { getDashboardOverview } from "../../features/dashboard/api/getDashboardOverview.jsx";
@@ -91,6 +92,13 @@ const planLabelMap = {
     pro: "Profissional",
     premium: "Premium",
 };
+
+function formatCurrency(value) {
+    return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+    });
+}
 
 function getAppointmentDateParts(startsAt) {
     if (!startsAt) {
@@ -299,7 +307,7 @@ export default function DashboardPage() {
     }
 
     const { stats, upcomingAppointments, statusSummary } = data;
-    const totalFutureByStatus = Object.values(statusSummary).reduce((sum, value) => sum + value, 0);
+    const totalAppointmentsByStatus = Object.values(statusSummary).reduce((sum, value) => sum + value, 0);
     const planName = planLabelMap[barbershop?.plan] || "Sem plano";
 
     return (
@@ -425,6 +433,31 @@ export default function DashboardPage() {
                 ))}
             </Box>
 
+            <SectionCard
+                title="Receita concluída"
+                subtitle="Estimativa calculada pelos serviços de agendamentos concluídos"
+                icon={<AttachMoneyRoundedIcon />}
+                action={
+                    <Chip
+                        size="small"
+                        label="Tempo real"
+                        sx={{
+                            borderRadius: 2,
+                            fontWeight: 800,
+                            bgcolor: "rgba(47,125,50,0.12)",
+                            color: "#2f7d32",
+                        }}
+                    />
+                }
+            >
+                <Typography variant="h3" fontWeight={900} sx={{ color: "#17181b", lineHeight: 1 }}>
+                    {formatCurrency(stats.revenueEstimate)}
+                </Typography>
+                <Typography sx={{ color: "rgba(17,18,20,0.58)", mt: 1 }}>
+                    Este valor é somado em tempo real a partir dos serviços marcados como concluídos.
+                </Typography>
+            </SectionCard>
+
             <Grid container spacing={2}>
                 <Grid item xs={12} lg={7}>
                     <SectionCard
@@ -528,13 +561,13 @@ export default function DashboardPage() {
                 <Grid item xs={12} lg={5}>
                     <SectionCard
                         title="Resumo por status"
-                        subtitle="Distribuição dos próximos agendamentos"
+                        subtitle="Distribuição de todos os agendamentos"
                         icon={<AssignmentTurnedInRoundedIcon />}
                         action={
                             <Chip
                                 size="small"
                                 icon={<CheckCircleRoundedIcon sx={{ fontSize: 16 }} />}
-                                label={`${totalFutureByStatus} total`}
+                                label={`${totalAppointmentsByStatus} total`}
                                 sx={{
                                     borderRadius: 2,
                                     fontWeight: 800,
@@ -548,7 +581,7 @@ export default function DashboardPage() {
                         <Stack spacing={2}>
                             {Object.entries(statusMetaMap).map(([statusKey, meta]) => {
                                 const value = statusSummary[statusKey] || 0;
-                                const percent = totalFutureByStatus ? Math.round((value / totalFutureByStatus) * 100) : 0;
+                                const percent = totalAppointmentsByStatus ? Math.round((value / totalAppointmentsByStatus) * 100) : 0;
 
                                 return (
                                     <Box key={statusKey}>

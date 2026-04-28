@@ -30,6 +30,7 @@ import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth.js";
+import { usePermissions } from "../../hooks/usePermissions.js";
 import { getDashboardOverview } from "../../features/dashboard/api/getDashboardOverview.jsx";
 import { getClients } from "../../features/clients/api/getClients.jsx";
 import { getServices } from "../../features/services/api/getServices.jsx";
@@ -185,6 +186,7 @@ function ReadinessItem({ label, ready, detail }) {
 
 export default function SettingsPage() {
     const { user, profile, membership, barbershop, refreshAuth } = useAuth();
+    const { canManageSettings } = usePermissions();
     const queryClient = useQueryClient();
 
     const [shopName, setShopName] = useState("");
@@ -295,6 +297,11 @@ export default function SettingsPage() {
     async function handleSaveShop(event) {
         event.preventDefault();
         setShopMessage("");
+
+        if (!canManageSettings) {
+            setShopMessage("Seu cargo não permite alterar dados da barbearia.");
+            return;
+        }
 
         await updateShopMutation.mutateAsync({
             id: barbershop.id,
@@ -454,6 +461,12 @@ export default function SettingsPage() {
                 }}
             >
                 <Stack spacing={2}>
+                    {!canManageSettings && (
+                        <Alert severity="warning">
+                            Seu cargo permite visualizar estas configurações, mas apenas administradores e gerentes podem alterar dados da barbearia.
+                        </Alert>
+                    )}
+
                     <SettingsPanel
                         title="Identidade da barbearia"
                         subtitle="Dados usados nas telas internas e na identificacao da operacao."
@@ -514,7 +527,7 @@ export default function SettingsPage() {
                                         type="submit"
                                         variant="contained"
                                         startIcon={<SaveRoundedIcon />}
-                                        disabled={updateShopMutation.isPending}
+                                        disabled={!canManageSettings || updateShopMutation.isPending}
                                         sx={{ minHeight: 54, borderRadius: 2, textTransform: "none", fontWeight: 850 }}
                                     >
                                         {updateShopMutation.isPending ? "Salvando..." : "Salvar barbearia"}

@@ -47,6 +47,7 @@ import { createAppointmentRecord } from "../../features/appointments/createAppoi
 import { updateAppointmentRecord } from "../../features/appointments/updateAppointment.jsx";
 import { deleteAppointmentRecord } from "../../features/appointments/deleteAppointment.jsx";
 import { getAppointmentAvailabilityError } from "../../features/appointments/utils/getAppointmentAvailabilityError.js";
+import { getAppointmentConflictError } from "../../features/appointments/utils/getAppointmentConflictError.js";
 import { getAppointmentErrorMessage } from "../../features/appointments/utils/getAppointmentErrorMessage.js";
 import { toDatabaseDateTimeFromLocalDateTime } from "../../features/appointments/utils/toUtcIsoFromLocalDateTime.js";
 
@@ -963,13 +964,31 @@ export default function AppointmentsPage() {
             };
         }
 
+        const conflictError = getAppointmentConflictError({
+            startsAt,
+            serviceId,
+            staffId,
+            services,
+            appointments,
+            currentAppointmentId: selectedAppointment?.id,
+        });
+
+        if (conflictError) {
+            return {
+                severity: "error",
+                message: conflictError,
+            };
+        }
+
         return {
             severity: "success",
-            message: "Horario disponivel: o barbeiro pode atender nessa data e hora.",
+            message: "Horário disponível: o barbeiro pode atender nessa data e hora.",
         };
     }, [
+        appointments,
         selectedStaffAvailability,
         selectedStaffAvailabilityFetched,
+        selectedAppointment?.id,
         serviceId,
         services,
         staffId,
@@ -1060,6 +1079,20 @@ export default function AppointmentsPage() {
 
         if (availabilityError) {
             setFormError(availabilityError);
+            return false;
+        }
+
+        const conflictError = getAppointmentConflictError({
+            startsAt,
+            serviceId,
+            staffId,
+            services,
+            appointments,
+            currentAppointmentId: selectedAppointment?.id,
+        });
+
+        if (conflictError) {
+            setFormError(conflictError);
             return false;
         }
 

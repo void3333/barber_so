@@ -25,7 +25,7 @@ test("aceita horario local dentro da disponibilidade do profissional", () => {
     assert.equal(error, "");
 });
 
-test("bloqueia quando a duracao do servico ultrapassa o fim da faixa", () => {
+test("bloqueia quando a duração do serviço ultrapassa o fim da faixa", () => {
     const error = getAppointmentAvailabilityError({
         startsAt: "2026-04-08T17:45",
         serviceId: "fade",
@@ -35,7 +35,7 @@ test("bloqueia quando a duracao do servico ultrapassa o fim da faixa", () => {
         availabilityFetched: true,
     });
 
-    assert.match(error, /09:00 as 18:00/);
+    assert.match(error, /09:00 às 18:00/);
 });
 
 test("bloqueia dias sem disponibilidade ativa", () => {

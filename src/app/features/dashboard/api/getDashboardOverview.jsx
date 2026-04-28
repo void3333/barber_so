@@ -55,7 +55,12 @@ export async function getDashboardOverview(barbershopId) {
 
         supabase
             .from("appointments")
-            .select("status")
+            .select(`
+        status,
+        service:services (
+          price
+        )
+      `)
             .eq("barbershop_id", barbershopId),
 
         supabase
@@ -116,6 +121,16 @@ export async function getDashboardOverview(barbershopId) {
             cancelled: 0,
         }
     );
+    const revenueEstimate = statusAppointments.reduce(
+        (sum, appointment) => {
+            if (appointment.status !== "completed") return sum;
+
+            const price = Number(appointment.service?.price);
+
+            return Number.isFinite(price) ? sum + price : sum;
+        },
+        0
+    );
 
     return {
         stats: {
@@ -123,6 +138,7 @@ export async function getDashboardOverview(barbershopId) {
             totalServices: servicesResult.count || 0,
             totalAppointments: totalAppointmentsResult.count || 0,
             todayAppointments: todayAppointmentsResult.count || 0,
+            revenueEstimate,
         },
         upcomingAppointments,
         statusSummary,

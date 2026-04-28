@@ -1,5 +1,5 @@
-const weekdayNames = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-const weekdayLabels = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
+const weekdayNames = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+const weekdayLabels = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 function timeToMinutes(value) {
     const [hours, minutes] = String(value || "").split(":").map(Number);
@@ -60,7 +60,7 @@ export function getAppointmentAvailabilityError({
     const dateTime = getLocalDateTimeParts(startsAt);
 
     if (!dateTime) {
-        return "Informe uma data e hora valida para conferir a disponibilidade.";
+        return "Informe uma data e hora válida para conferir a disponibilidade.";
     }
 
     const selectedService = services.find((service) => service.id === serviceId);
@@ -75,7 +75,7 @@ export function getAppointmentAvailabilityError({
         .filter((range) => range.start !== null && range.end !== null);
 
     if (dayRanges.length === 0) {
-        return `Essa data nao pode ser usada: o barbeiro nao possui disponibilidade ativa para ${weekdayNames[dateTime.weekday]}.`;
+        return `Essa data não pode ser usada: o barbeiro não possui disponibilidade ativa para ${weekdayNames[dateTime.weekday]}.`;
     }
 
     const isInsideRange = dayRanges.some((range) => (
@@ -85,8 +85,8 @@ export function getAppointmentAvailabilityError({
 
     if (isInsideRange) return "";
 
-    const rangesText = dayRanges.map((range) => `${formatMinutes(range.start)} as ${formatMinutes(range.end)}`).join(", ");
-    const durationText = duration > 0 ? ` considerando ${duration} min de servico` : "";
+    const rangesText = dayRanges.map((range) => `${formatMinutes(range.start)} às ${formatMinutes(range.end)}`).join(", ");
+    const durationText = duration > 0 ? ` considerando ${duration} min de serviço` : "";
 
-    return `Essa data e hora nao podem ser usadas: o horario fica fora da disponibilidade do barbeiro em ${weekdayLabels[dateTime.weekday]} (${rangesText})${durationText}.`;
+    return `Essa data e hora não podem ser usadas: o horário fica fora da disponibilidade do barbeiro em ${weekdayLabels[dateTime.weekday]} (${rangesText})${durationText}.`;
 }
